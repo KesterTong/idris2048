@@ -4,18 +4,24 @@ import Effect.Random
 import Effect.System
 
 -- Fills in an array 
-fillIn : LTE m n -> Vect m a -> a -> Vect n a
+fillIn : LTE n m -> Vect n a -> a -> Vect m a
 fillIn lteZero [] c                 = replicate _ c
 fillIn (lteSucc w) (x :: xs) c      = x :: (fillIn w xs c)
 
 -- For arguments the a resulting list is not longer than
--- the original list, we usually want to go from m <= n
--- to m <= n + 1.  That is, we apply the successor funciton
--- but only to the right hand side.
-lteSuccR : LTE m n -> LTE m (S n)
+-- the original list, we usually want to go from n <= m
+-- to n <= m + 1.  That is, we apply the successor funciton
+-- but only to the right hand side.  This function proves
+-- that n <= m implies n <= m + 1
+lteSuccR : LTE n m -> LTE n (S m)
 lteSuccR lteZero     = lteZero
 lteSuccR (lteSucc w) = lteSucc (lteSuccR w)
 
+-- filters out the Nothings from a vector with element of type Maybe a
+-- and returns the dependent pair (m ** (Vect m a, LTE m n)) where
+-- m is the new length, Vect m a is the filtered list, and LTE m n
+-- is a prove that m <= n, that is, that the new list has length
+-- less than or equal to the original list.
 filterMaybes : Vect n (Maybe a) -> (m ** (Vect m a, LTE m n))
 filterMaybes []              = (Z ** ([], lteZero))
 filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
@@ -23,6 +29,9 @@ filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
 filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
   (_ ** (ys, lteSuccR w))
 
+--Performs the collapsing of pairs operation of the 2048 game.
+--Has the same format as filterMaybes, returning a vector of length
+--m and proof that m <= n.
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
 collapsePairs (x :: xprime :: xs) = 
     if x == xprime then
@@ -34,19 +43,25 @@ collapsePairs []                  = (_ ** ([], lteZero))
 
 --- The 2048 Game
 
--- Transitivity of the less-than-or-equal-to operator
+-- Transitivity of the <= operator
 -- m <= n and n <= k impy m <= k
-lteTrans : LTE m n -> LTE n k -> LTE m k
+lteTrans : LTE n m -> LTE m l -> LTE n l
 lteTrans lteZero _               = lteZero
 lteTrans (lteSucc w) (lteSucc z) = lteSucc (lteTrans w z)
 
--- The basic row operation of the 2048 game: 
+-- The basic row operation of the 2048 game.
+-- Combines the operations of filterMaybes and collapsePairs,
+-- and combines their proofs, and transivity of <=, to
+-- prove that the result of applying both operations is
+-- a shorter vector than the original.  This proof is used
+-- to apply the fillIn function.
 basicRowOperation : (Eq a, Num a) => Vect n (Maybe a) -> Vect n (Maybe a)
 basicRowOperation xs = let (m ** (ys, w)) = filterMaybes xs in let
   (l ** (zs, wPrime)) = collapsePairs ys in
   (fillIn (lteTrans wPrime w) (map Just zs) Nothing)
 
 -- The basic board operations of the 2048 game
+
 -- Takes the transpose of a rectangular array
 transposeArray : Vect m (Vect n a) -> Vect n (Vect m a)
 transposeArray []        = replicate _ []
