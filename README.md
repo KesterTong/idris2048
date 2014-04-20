@@ -26,19 +26,19 @@ This section discusses the code, with emphasis on the effects of the dependent t
 The main operation in 2048 is pushing cells in a direction.  If we consider a single row of cells, move takes a row, e.g.
 <table>
     <tr>
-        <td>4</td><td>_</td><td>2</td><td>2</td>
+        <td>4</td><td>&nbsp;&nbsp;</td><td>2</td><td>2</td>
     </tr>
 </table>
 moves non-empty cells to the left
 <table>
     <tr>
-        <td>4</td><td>2</td><td>2</td><td>_</td>
+        <td>4</td><td>2</td><td>2</td><td>&nbsp;&nbsp;</td>
     </tr>
 </table>
 and then collapses adjacent cells that have the same number, combining those numbers into a number with double the value. In this case, the two 2's combine into a 4, to give
 <table>
     <tr>
-        <td>4</td><td>4</td><td>_</td><td>_</td>
+        <td>4</td><td>4</td><td>&nbsp;&nbsp;</td><td>&nbsp;&nbsp;</td>
     </tr>
 </table>
 Note that there is only one pass: the 4's don't immediately combine into an 8.
