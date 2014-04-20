@@ -74,7 +74,7 @@ fillInList c l = if length l < 4 then
 
 Idris has types, like Vect n a, which represents a vector of length n and with elements of type a.  It also has types that represent assertions, or propositions.  The type LTE m n represnts the proposition that m is less than n.  It is non-empty exactly when m <= n.  An element of LTE m n can be thought of as a witness, or proof, that m <= n.  The fill in function in Idris is given by
 ```
-fillIn : LTE m n -> a -> Vect m a -> Vect n a
+fillIn : LTE n m -> a -> Vect n a -> Vect m a
 fillIn lteZero c []            = replicate _ c
 fillIn (lteSucc w) c (x :: xs) = x :: (fillIn w c xs)
 ```
@@ -91,7 +91,9 @@ data LTE  : (n, m : Nat) -> Type where
   ||| If n <= m, then n + 1 <= m + 1
   lteSucc : LTE left right -> LTE (S left) (S right)
 ```
-The first constructor, lteZero, represents the fact that 0 <= m for all m, while the second takes a proof that n <= m and gives a proof n + 1 <= m + 1.  So we can define fillIn by recursion on the witness and the vector.  But because we (and the compiler) know something about the type of the witness an the type of the vector, there are two cases, not four.  When m=Z, then there is only one case that applies for constructing the witness, lteZero, and for the vector, the empty vector. When m=Sk for some k, then the witness must have the form lteSucc w and the vector must have the form y :: ys.
+The first constructor, lteZero, represents the fact that 0 <= m for all m, while the second takes a proof that n <= m and gives a proof n + 1 <= m + 1.  So we can define fillIn by recursion on the witness and the vector.  Naively, there would be four cases, two for the witness, by two for the vector.  But because we know that both these type depend on m, there are actually only two cases we need to consider.  When n = Z (the Nat type uses Z instead of zero to distinguish it from the Integer type), then there is only one case that applies for constructing the witness, lteZero, and for the vector, the empty vector. When n=Sk for some k, then the witness must have the form lteSucc w and the vector must have the form y :: ys.  These two cases are given above.
+
+Verbally, the logic of the above functions is as follows: given n <= m and a vector of length n, we want to fill in the vector m, with the provided constant, to become a vector of length n.  There are two cases.  In the case n = Z, then we can construct the vector by replicating the constant m times.  In the case of n = k + 1, we by induction on the definition of n <= m, there must be and l such that m = l + 1 and k <= l.  Furthermore, the vector has length k + 1 and so must have the form x :: xs, where xs has length k.  Then we can apply the function fillIn to the vector xs, to get a vector of length l, since we know that k <= l.  Call this vector (fillIn w c xs).  The vector x :: (fillIn w c xs) has length l + 1, which equals m.  This is x :: xs filled in to length m.
 
 The compiler is able to automatically make these inferences, so that if we load this code into the interpreter (first run idris -p effects to load the interpreter with the effects package) and run the commands
 ```
@@ -100,5 +102,6 @@ The compiler is able to automatically make these inferences, so that if we load 
 ```
 the interpreter will report that fillIn is a total function, i.e. we haven't left any cases out.
 
-
 It's worth noting some other things.  Some variables can be left out entirely, like the first argument to repllicate.  This is because the compiler can infer that this must be n.  n is not actually an argument to the function, but it is an implicit argument, which we will see more of later.
+
+...to be continued...
