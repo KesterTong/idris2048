@@ -3,7 +3,21 @@ This project ports the game [2048](http://gabrielecirulli.github.io/2048/) to th
 
 This project will be much easier to understand if you are familiar with Haskell.
 ##Compiling and Running
-After installing Idris and cloning this repo...
+After installing Idris and cloning this repo, you can type in the console (instructions for OSX)
+```bash
+idris game.idr -o game -p effects
+```
+This compiles the file game.idr, to the executable file game.  The flag -p effects instructs the compiler
+to user the Effect library, which is needed for IO, exceptions, and random number generation.
+
+To play the game, type
+```bash
+./game
+```
+
+The keys are a, s, d, and w for moving, and x for quit.  Currently, there is no code
+to detect winning or losing the game, and the UI is someone quirky, but it is good
+enough to see that the basic logic of the game is working.
 
 ##Discussion
 This section discusses the code, with emphasis on the effects of the dependent type system.
