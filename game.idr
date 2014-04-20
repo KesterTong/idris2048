@@ -135,12 +135,21 @@ movePeices 's' b = return (downMove b)
 movePeices 'x' b = raise "You have quit."
 movePeices _ b = return b
 
--- Fixes a bug in Effects.Random.rndFin, where it throws
--- an execption  when rndFin Z is called, instead
--- of always returning fZ
+-- My version of rndFin.  Unlike the function in Effects.Random,
+-- rndFin' k takes all possible values in Fin (S k).  That is,
+-- it takes values 0,1,...,k.  Even though this is different
+-- to the function rndInt 0 k, which only takes values in
+-- 0,1,...,k-1, it seems more natural since we would expect
+-- that the rndFin function be uniform on the type Fin (S k).
 rndFin' : (k : Nat) -> { [RND] } Eff m (Fin (S k))
-rndFin' Z     = return fZ
-rndFin' (S k) = rndFin (S k)
+rndFin' k = do let v = !getRandom `prim__sremBigInt` (cast (S k))
+               return (toFin v)
+  where toFin : Integer -> Fin (S k)
+        toFin x = case integerToFin x (S k) of
+                      Just v => v
+                      Nothing => toFin (assert_smaller x (x - cast (S k)))
+
+
 
 -- Select a random element from an array, or raise an exception
 -- if the array is empty
