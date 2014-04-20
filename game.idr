@@ -142,14 +142,11 @@ movePeices _ b = return b
 -- 0,1,...,k-1, it seems more natural since we would expect
 -- that the rndFin function be uniform on the type Fin (S k).
 rndFin' : (k : Nat) -> { [RND] } Eff m (Fin (S k))
-rndFin' k = do let v = !getRandom `prim__sremBigInt` (cast (S k))
-               return (toFin v)
-  where toFin : Integer -> Fin (S k)
-        toFin x = case integerToFin x (S k) of
-                      Just v => v
-                      Nothing => toFin (assert_smaller x (x - cast (S k)))
-
-
+rndFin' k = do x = rndFin (S k)
+               return fixStrengthened (strengthen x)
+  where fixStrengthened : Either (Fin (S n)) (Fin n) -> Fin n
+        fixStrengthened Left _  = fZ
+        fixStrengthened Right y = y
 
 -- Select a random element from an array, or raise an exception
 -- if the array is empty
