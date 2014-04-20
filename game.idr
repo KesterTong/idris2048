@@ -4,9 +4,9 @@ import Effect.Random
 import Effect.System
 
 -- Fills in an array 
-fillIn : LTE n m -> Vect n a -> a -> Vect m a
-fillIn lteZero [] c                 = replicate _ c
-fillIn (lteSucc w) (x :: xs) c      = x :: (fillIn w xs c)
+fillIn : LTE n m -> a -> Vect n a -> Vect m a
+fillIn lteZero c []                 = replicate _ c
+fillIn (lteSucc w) c (x :: xs)      = x :: (fillIn w c xs)
 
 -- For arguments the a resulting list is not longer than
 -- the original list, we usually want to go from n <= m
@@ -58,7 +58,7 @@ lteTrans (lteSucc w) (lteSucc z) = lteSucc (lteTrans w z)
 basicRowOperation : (Eq a, Num a) => Vect n (Maybe a) -> Vect n (Maybe a)
 basicRowOperation xs = let (m ** (ys, w)) = filterMaybes xs in let
   (l ** (zs, wPrime)) = collapsePairs ys in
-  (fillIn (lteTrans wPrime w) (map Just zs) Nothing)
+  (fillIn (lteTrans wPrime w) Nothing (map Just zs))
 
 -- The basic board operations of the 2048 game
 
