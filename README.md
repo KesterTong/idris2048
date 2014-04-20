@@ -80,9 +80,16 @@ fillIn (lteSucc w) c (y :: ys) = y :: (fillIn w c ys)
 ```
 From the signature, it takes a witness that m <= n, an element of type a, and a vector of length m (of elements of type a) and returns a vector of length n (of elements of type a).  Since the type LTE m n is empty unless m <= n, it is impossible to call fillIn unless m <= n.  This is very useful to know, because on the one hand, we don't have to right logic for cases which we know will never occur (like in the fillInList function), and on the other hand, the type checker will ensure that this function will only be called when m <= n.  We'll show later how this is possible even in the case where the length of the vector varies at run time, like in the game 2048.
 
-As the above shows, dealing with witnesses/proofs is not much more difficult than dealing with recursive data types.  The first case deals with the case when m = 0.  In this case, an element of Vect m a must be the zero vector [].  Even though we didn't need it, we specified the witness, which is the only witness of 0 <= n, for any n, which is called lteZero.  This can be thought of as the axiom that 0 <= n for all n.  As the second case suggests, LTE is a generalized algebraic data type, and the other way to construct it is with the function
+As the above shows, dealing with witnesses/proofs is not much more difficult than dealing with recursive data types.  The first case deals with the case when m = 0.  In this case, an element of Vect m a must be the zero vector [].  Even though we didn't need it, we specified the witness, which is the only witness of 0 <= n, for any n, which is called lteZero.  This can be thought of as the axiom that 0 <= n for all n.  As the second case suggests, LTE is a generalized algebraic data type, defined in Prelude.Nat by
 ```
-Prelude.Nat.lteSucc : (LTE left right) -> LTE (S left) (S right)
+||| Proofs that `n` is less than or equal to `m`
+||| @ n the smaller number
+||| @ m the larger number
+data LTE  : (n, m : Nat) -> Type where
+  ||| Zero is the smallest Nat
+  lteZero : LTE Z    right
+  ||| If n <= m, then n + 1 <= m + 1
+  lteSucc : LTE left right -> LTE (S left) (S right)
 ```
 This takes a witness that m <= n, and returns a witness that m + 1 <= n + 1.  Note that we are doing a kind of simultaneous structural induction on the witness, and the vector.  In the case where the vector is non-empty, then we must have m = S k, in which case the witness must have the form lteSucc w.
 
