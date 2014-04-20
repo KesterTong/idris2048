@@ -71,7 +71,7 @@ fillInList c l = if length l < 4 then
   else
   	take 4 l
 ```
-
+###Implementing the Functions in Idris
 Idris has types, like Vect n a, which represents a vector of length n and with elements of type a.  It also has types that represent assertions, or propositions.  The type LTE m n represnts the proposition that m is less than n.  It is non-empty exactly when m <= n.  An element of LTE m n can be thought of as a witness, or proof, that m <= n.  The fill in function in Idris is given by
 ```
 fillIn : LTE n m -> a -> Vect n a -> Vect m a
