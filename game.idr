@@ -127,10 +127,6 @@ showBoard (x::xs) = (showRow x) ++ "\n" ++ (showBoard xs)
 Board : Type
 Board = MaybeArray 4 4 Int
 
---movePeices : Char -> Board -> {[RND, EXCEPTION String]} Eff IO (Board)
---movePeices '' = do
---	return $ b
-
 movePeices : Char -> Board -> {[EXCEPTION String]} Eff IO (Board)
 movePeices 'a' b = return (leftMove b)
 movePeices 'd' b = return (rightMove b)
