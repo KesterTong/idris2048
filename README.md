@@ -95,12 +95,19 @@ The first constructor, lteZero, represents the fact that 0 <= m for all m, while
 
 Verbally, the logic of the above functions is as follows: given n <= m and a vector of length n, we want to fill in the vector m, with the provided constant, to become a vector of length n.  There are two cases.  In the case n = Z, then we can construct the vector by replicating the constant m times.  In the case of n = k + 1, we by induction on the definition of n <= m, there must be and l such that m = l + 1 and k <= l.  Furthermore, the vector has length k + 1 and so must have the form x :: xs, where xs has length k.  Then we can apply the function fillIn to the vector xs, to get a vector of length l, since we know that k <= l.  Call this vector (fillIn w c xs).  The vector x :: (fillIn w c xs) has length l + 1, which equals m.  This is x :: xs filled in to length m.
 
-The compiler is able to automatically make these inferences, so that if we load this code into the interpreter (first run idris -p effects to load the interpreter with the effects package) and run the commands
+The compiler is able to automatically make these inferences, so that if we load this code into the interpreter (first run idris -p effects to load the interpreter with the effects package), we can query the function fillIn, and the interpreter will confirm that it is total, i.e. guaranteed to return a value:
 ```
-:l game
-:total fillIn
+$ idris -p effects
+     ____    __     _                                          
+    /  _/___/ /____(_)____                                     
+    / // __  / ___/ / ___/     Version 0.9.12
+  _/ // /_/ / /  / (__  )      http://www.idris-lang.org/      
+ /___/\__,_/_/  /_/____/       Type :? for help                
+
+Idris> :l game
+*game> :total fillIn 
+Main.fillIn is Total
 ```
-the interpreter will report that fillIn is a total function, i.e. we haven't left any cases out.
 
 It's worth noting some other things.  Some variables can be left out entirely, like the first argument to repllicate.  This is because the compiler can infer that this must be n.  n is not actually an argument to the function, but it is an implicit argument, which we will see more of later.
 
