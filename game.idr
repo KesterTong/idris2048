@@ -133,8 +133,6 @@ rndFin' (S k) = rndFin (S k)
 
 -- Select a random element from an array, or raise an exception
 -- if the array is empty
--- Note the second case should be unnecesary, but rndFin has a bug
--- the throws an exception
 selectRandom : Vect n a -> {[RND, EXCEPTION String]} Eff IO (a)
 selectRandom {n=Z}     _ = raise "Game Over"
 selectRandom {n=(S k)} x = return (Vect.index !(rndFin' k)  x)
