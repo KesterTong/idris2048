@@ -141,6 +141,9 @@ movePeices _ b = return b
 -- to the function rndInt 0 k, which only takes values in
 -- 0,1,...,k-1, it seems more natural since we would expect
 -- that the rndFin function be uniform on the type Fin (S k).
+-- NOTE this code is a horrible hack.  It woud be a one line
+-- change to modify rndFin to behave like rndFin', but I don't
+-- want to copy library code into this file.
 rndFin' : (k : Nat) -> { [RND] } Eff m (Fin (S k))
 rndFin' k = do x <- rndFin (S k)
                return (fixStrengthened (strengthen x))
