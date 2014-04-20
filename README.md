@@ -16,7 +16,7 @@ To play the game, type
 ```
 
 The keys are a, s, d, and w for moving, and x for quit.  Currently, there is no code
-to detect winning or losing the game, and the UI is someone quirky, but it is good
+to detect winning or losing the game, and the UI is somewhat quirky, but it is good
 enough to see that the basic logic of the game is working.
 
 ##Discussion
