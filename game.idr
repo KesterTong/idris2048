@@ -6,7 +6,7 @@ import Effect.System
 -- Fills in an array 
 fillIn : LTE m n -> Vect m a -> a -> Vect n a
 fillIn lteZero [] c                 = replicate _ c
-fillIn (lteSucc w) (y :: ys) c      = y :: (fillIn w ys c)
+fillIn (lteSucc w) (x :: xs) c      = x :: (fillIn w xs c)
 
 -- For arguments the a resulting list is not longer than
 -- the original list, we usually want to go from m <= n
