@@ -147,4 +147,6 @@ basicRowOperation xs = let (m ** (ys, w)) = filterMaybes xs in let
   (fillIn (lteTrans wPrime w) Nothing (map Just zs))
 ```
 
+As before, the compiler/interpreter knows that the function basicRowOperation is total.  This is a cool property, because the function is proven to be total even though we didn't define the extra cases like in fillInList.
+
 ...to be continued...
