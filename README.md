@@ -1,5 +1,5 @@
 #2048 in Idris
-This project ports the game [2048](http://gabrielecirulli.github.io/2048/) to the dependently typed programming language [Idris](www.idris-lang.org/).  Depenently typed languages are interesting because they allow the type system to express much stronger constraints than other lanaguges.  Idris appealed to me because of its emphasis on general purpose programming (as opposed to automated theorem proving) and its Haskell based syntax.  I made this project to learn Idris - 2048 is a good level of complexity for learning the basics of language - and I hope it can help other people who are learning Idris.
+This project ports the game [2048](http://gabrielecirulli.github.io/2048/) to the dependently typed programming language [Idris](http://www.idris-lang.org/).  Depenently typed languages are interesting because they allow the type system to express much stronger constraints than other lanaguges.  Idris appealed to me because of its emphasis on general purpose programming (as opposed to automated theorem proving) and its Haskell based syntax.  I made this project to learn Idris - 2048 is a good level of complexity for learning the basics of language - and I hope it can help other people who are learning Idris.
 
 This project will be much easier to understand if you are familiar with Haskell.
 ##Compiling and Running
