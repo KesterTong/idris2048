@@ -9,8 +9,8 @@ import Effect.System
 
 ||| Fills in an array 
 fillIn : LTE n m -> a -> Vect n a -> Vect m a
-fillIn lteZero c []                 = replicate _ c
-fillIn (lteSucc w) c (x :: xs)      = x :: (fillIn w c xs)
+fillIn lteZero c []            = replicate _ c
+fillIn (lteSucc w) c (x :: xs) = x :: (fillIn w c xs)
 
 ||| Takes a proof that n <= m and gives a proof that n <= m + 1
 lteSuccR : LTE n m -> LTE n (S m)
@@ -153,11 +153,11 @@ move Down  = transposeArray . (move Right) . transposeArray
 
 addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff IO (Board)
 addRandomPiece arr =
-	let flattened = flattenArray arr in
-	  let (_ ** maybeIndices) = findIndicesFin isNothing flattened in
-	    do
-	    	insertionIndex <- selectRandom maybeIndices
-	    	return (unFlattenArray (replaceAt insertionIndex (Just 2) flattened))
+  let flattened = flattenArray arr in
+    let (_ ** maybeIndices) = findIndicesFin isNothing flattened in
+      do
+        insertionIndex <- selectRandom maybeIndices
+        return (unFlattenArray (replaceAt insertionIndex (Just 2) flattened))
 
 data UserAction = Quit | Invalid | Move Direction
 
@@ -168,8 +168,6 @@ getAction 'w' = Move Up
 getAction 's' = Move Down
 getAction 'x' = Quit
 getAction _   = Invalid
-
-
 
 mainLoop : Board -> {[RND, STDIO, EXCEPTION String]} Eff IO (Board)
 mainLoop b = do putStrLn (showBoard b)
@@ -188,13 +186,10 @@ mainLoop b = do putStrLn (showBoard b)
 
 startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff IO ()
 startGame = do
-	srand $ prim__zextInt_BigInt !time
-	initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
-	mainLoop initialBoard
-	return ()
-	
+  srand $ prim__zextInt_BigInt !time
+  initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
+  mainLoop initialBoard
+  return ()	
 
 main : IO ()
 main = run startGame
-
-  
