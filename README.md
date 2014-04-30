@@ -1,5 +1,5 @@
 #2048 in Idris
-This project ports the game [2048](http://gabrielecirulli.github.io/2048/) to the dependently typed programming language [Idris](http://www.idris-lang.org/).  Depenently typed languages are interesting because they allow the type system to express much stronger constraints than other languages.  Idris appealed to me because of its emphasis on general purpose programming (as opposed to automated theorem proving) and its Haskell based syntax.  I made this project to learn Idris - 2048 is a good level of complexity for learning the basics of language - and I hope it can help other people who are learning Idris.
+This project ports the game [2048](http://gabrielecirulli.github.io/2048/) to the dependently typed programming language [Idris](http://www.idris-lang.org/).  Dependently typed languages are interesting because they allow the type system to express much stronger constraints than other languages.  Idris appealed to me because of its emphasis on general purpose programming (as opposed to automated theorem proving) and its Haskell based syntax.  I made this project to learn Idris - 2048 is a good level of complexity for learning the basics of language - and I hope it can help other people who are learning Idris.
 
 This project will be much easier to understand if you are familiar with Haskell.
 ##Compiling and Running
@@ -72,7 +72,7 @@ fillInList c l = if length l < 4 then
   	take 4 l
 ```
 ###Implementing the filIn Function in Idris
-Idris has types, like Vect n a, which represents a vector of length n and with elements of type a.  It also has types that represent assertions, or propositions.  The type LTE m n represnts the proposition that m is less than n.  It is non-empty exactly when m <= n.  An element of LTE m n can be thought of as a witness, or proof, that m <= n.  The fill in function in Idris is given by
+Idris has types, like Vect n a, which represents a vector of length n and with elements of type a.  It also has types that represent assertions, or propositions.  The type LTE m n represents the proposition that m is less than n.  It is non-empty exactly when m <= n.  An element of LTE m n can be thought of as a witness, or proof, that m <= n.  The fill in function in Idris is given by
 ```
 fillIn : LTE n m -> a -> Vect n a -> Vect m a
 fillIn lteZero c []            = replicate _ c
@@ -109,7 +109,7 @@ Idris> :l game
 Main.fillIn is Total
 ```
 
-It's worth noting some other things.  Some variables can be left out entirely, like the first argument to repllicate.  This is because the compiler can infer that this must be n.  n is not actually an argument to the function, but it is an implicit argument, which we will see more of later.
+It's worth noting some other things.  Some variables can be left out entirely, like the first argument to replicate.  This is because the compiler can infer that this must be n.  n is not actually an argument to the function, but it is an implicit argument, which we will see more of later.
 
 ###Implementing the Other Functions
 Now that we have the fillIn function, we can work backwards and construct the filterMaybes and collapsePairs functions.  The filterMaybes function looks like this:
@@ -121,7 +121,7 @@ filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
 filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
   (_ ** (ys, lteSuccR w))
 ```
-The return value of filterMaybes is a dependent pair.  A dependent pair is a pair when the type of the second value can depend of the first value.  In this case, the first value is a Nat (this is implict) named m, and the second value is a regular pair of a vector of length m, and a proof that m <= n.  The reason for using a dependent pair, is that if we wrote the signature Vect n (Maybe a) -> (Vect m a, LTE m n), then m would be an implicit argument.  This doesn't suit our needs as the value of m should be determined within the function, not by the caller.
+The return value of filterMaybes is a dependent pair.  A dependent pair is a pair when the type of the second value can depend of the first value.  In this case, the first value is a Nat (this is implicit) named m, and the second value is a regular pair of a vector of length m, and a proof that m <= n.  The reason for using a dependent pair, is that if we wrote the signature Vect n (Maybe a) -> (Vect m a, LTE m n), then m would be an implicit argument.  This doesn't suit our needs as the value of m should be determined within the function, not by the caller.
 
 The function needs to compute two things: the new vector, and the proof that the vector has length less than n.  For example, in the case where the vector has the form (Just x :: xs), we can apply filterMaybes to xs.  Let the resulting vector be ys, which has length less or equal to the length of xs, which is n - 1.  Let w be the witness to this.  Therefore lteSucc w is a witness to the length of (x :: ys) being less than or equal to n.  In the other case, (Nothing ::xs), we want to use the vector ys in the return value.  While ys has length less than n - 1, so it also has length less than n, applying lteSucc doesn't give the appropriate witness: it proves that the length of ys plus one, is less than or equal to n - 1.  So we have to construct our own function to give a witness of the right type, which is named lteSuccR, and defined in game.idr.
 
