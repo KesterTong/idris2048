@@ -38,25 +38,25 @@ filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
 ||| are equal, combines them into a single element with double the value.
 ||| Returns a vector of length m and proof that m <= n.
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
-collapsePairs (x :: xprime :: xs) = 
-  if x == xprime then
+collapsePairs (x::x'::xs) = 
+  if x == x' then
     let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (lteSucc w)))
   else
-     let (_ ** (ys, w)) = collapsePairs (xprime :: xs) in (_ ** (x :: ys, lteSucc w))
-collapsePairs (x :: [])           = (_ ** ([x], lteSucc lteZero))
-collapsePairs []                  = (_ ** ([], lteZero))
+     let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, lteSucc w))
+collapsePairs (x::[])     = (_ ** ([x], lteSucc lteZero))
+collapsePairs []          = (_ ** ([], lteZero))
 
 ||| Proof of transitivity of the <= operator
 |||
 ||| Takes proofs that n <= m and m <= l and gives a proof that n <= l
 lteTrans : LTE n m -> LTE m l -> LTE n l
-lteTrans lteZero _               = lteZero
-lteTrans (lteSucc w) (lteSucc z) = lteSucc (lteTrans w z)
+lteTrans lteZero _                = lteZero
+lteTrans (lteSucc p) (lteSucc p') = lteSucc (lteTrans p p')
 
 ||| The basic row operation of the 2048 game.
 |||
 ||| Combines the operations of filterMaybes and collapsePairs,
-||| and combines their proofs, and transivity of <=, to
+||| and combines their proofs, and transitivity of <=, to
 ||| prove that the result of applying both operations is
 ||| a shorter vector than the original.  This proof is used
 ||| to apply the fillIn function.
@@ -70,40 +70,40 @@ basicRowOperation xs = let (m ** (ys, w)) = filterMaybes xs in let
 --------------------------------------------------------------------------------
 
 ||| Takes the transpose of a rectangular array
-transposeArray : Vect m (Vect n a) -> Vect n (Vect m a)
-transposeArray []        = replicate _ []
-transposeArray (x :: xs) = zipWith (::) x (transposeArray xs)
+transposeArray : Vect n (Vect m a) -> Vect m (Vect n a)
+transposeArray []      = replicate _ []
+transposeArray (x::xs) = zipWith (::) x (transposeArray xs)
 
 ||| Flattens a rectangular array
-flattenArray : Vect m (Vect n a) -> (Vect (m * n) a)
-flattenArray Nil       = Nil
-flattenArray (x :: xs) = x ++ (flattenArray xs)
+flattenArray : Vect n (Vect m a) -> Vect (n * m) a
+flattenArray Nil     = Nil
+flattenArray (x::xs) = x ++ (flattenArray xs)
 
 ||| Splits an array
-split' : Vect (plus m n) a -> (Vect m a, Vect n a)
-split' {m=Z} x                = ([], x)
-split' {m=(S k)}{n=l} (x::xs) = let (y, z) = split' {m=k}{n=l} xs in
-  (x::y, z)
+split' : Vect (plus n m) a -> (Vect n a, Vect m a)
+split' {n=Z} xs                = ([], xs)
+split' {n=(S k)}{m=l} (x::xs) = let (ys, zs) = split' {n=k}{m=l} xs in
+  (x::ys, zs)
 
 ||| Unflattens an array
-unFlattenArray : Vect (m * n) a -> (Vect m (Vect n a)) 
-unFlattenArray {m=Z} Nil = Nil
-unFlattenArray {m=(S k)}{n=l} x = let (y, z) = split' {m=l}{n=k*l}  x in
-  (y :: (unFlattenArray z))
+unFlattenArray : Vect (n * m) a -> Vect n (Vect m a)
+unFlattenArray {n=Z} Nil         = Nil
+unFlattenArray {n=(S k)}{m=l} xs = let (ys, zs) = split' {n=l}{m=k*l} xs in
+  (ys :: (unFlattenArray zs))
 
 ||| Find the indices of all elements of a vector that satisfy some test
-total findIndicesFin : (a -> Bool) -> Vect m a -> (p ** Vect p (Fin m))
-findIndicesFin p [] = (_ ** [])
-findIndicesFin p (x::xs) with (findIndicesFin p xs)
+total findIndicesFin : (a -> Bool) -> Vect n a -> (k ** Vect k (Fin n))
+findIndicesFin f [] = (_ ** [])
+findIndicesFin f (x::xs) with (findIndicesFin f xs)
       | (_ ** tail) =
-       if p x then
+       if f x then
         (_ ** fZ::(map fS tail))
        else
         (_ ** (map fS tail))
 
-||| Randomly selects an element in a finite set of given size
+||| selects a random element in a finite set of given size
 ||| 
-||| Unlike the function Effects.Random.Fin, rndFin' k takes all possible
+||| Unlike the function Effects.Random.rndFin, rndFin' k takes all possible
 ||| values in Fin (S k).  That is, it takes values 0,1,...,k.
 rndFin' : (k : Nat) -> { [RND] } Eff m (Fin (S k))
 rndFin' k = do x <- rndFin (S k)
@@ -117,8 +117,8 @@ rndFin' k = do x <- rndFin (S k)
 ||| Selects a random element from a vector, or raises an exception
 ||| if the array is empty.
 selectRandom : Vect n a -> {[RND, EXCEPTION String]} Eff IO (a)
-selectRandom {n=Z}     _ = raise "Game Over"
-selectRandom {n=(S k)} x = return (Vect.index !(rndFin' k)  x)
+selectRandom {n=Z}     _  = raise "Game Over"
+selectRandom {n=(S k)} xs = return (Vect.index !(rndFin' k)  xs)
 
 --------------------------------------------------------------------------------
 -- Display functions
@@ -129,11 +129,11 @@ showValue Nothing  = "...."
 showValue (Just x) = pack (List.take 4 (unpack ((show x) ++ "....")))
 
 showRow : Show a => Vect n (Maybe a) -> String
-showRow [] = ""
+showRow []      = ""
 showRow (x::xs) = (showValue x) ++ " " ++ (showRow xs)
 
 showBoard : Show a => Vect m (Vect n (Maybe a)) -> String
-showBoard [] = ""
+showBoard []      = ""
 showBoard (x::xs) = (showRow x) ++ "\n" ++ (showBoard xs)
 
 --------------------------------------------------------------------------------
