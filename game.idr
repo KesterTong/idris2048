@@ -127,13 +127,13 @@ showBoard (x::xs) = (showRow x) ++ "\n" ++ (showBoard xs)
 Board : Type
 Board = MaybeArray 4 4 Int
 
-movePeices : Char -> Board -> {[EXCEPTION String]} Eff IO (Board)
-movePeices 'a' b = return (leftMove b)
-movePeices 'd' b = return (rightMove b)
-movePeices 'w' b = return (upMove b)
-movePeices 's' b = return (downMove b)
-movePeices 'x' b = raise "You have quit."
-movePeices _ b = return b
+movePieces : Char -> Board -> {[EXCEPTION String]} Eff IO (Board)
+movePieces 'a' b = return (leftMove b)
+movePieces 'd' b = return (rightMove b)
+movePieces 'w' b = return (upMove b)
+movePieces 's' b = return (downMove b)
+movePieces 'x' b = raise "You have quit."
+movePieces _ b = return b
 
 -- My version of rndFin.  Unlike the function in Effects.Random,
 -- rndFin' k takes all possible values in Fin (S k).  That is,
@@ -157,8 +157,8 @@ selectRandom : Vect n a -> {[RND, EXCEPTION String]} Eff IO (a)
 selectRandom {n=Z}     _ = raise "Game Over"
 selectRandom {n=(S k)} x = return (Vect.index !(rndFin' k)  x)
 
-addRandomPeice : Board -> {[RND, EXCEPTION String]} Eff IO (Board)
-addRandomPeice arr =
+addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff IO (Board)
+addRandomPiece arr =
 	let flattened = flattenArray arr in
 	  let (_ ** maybeIndices) = findIndicesFin isNothing flattened in
 	    do
@@ -169,18 +169,18 @@ mainLoop : Board -> {[RND, STDIO, EXCEPTION String]} Eff IO (Board)
 mainLoop b = do
 	putStrLn $ showBoard b
 	c <- getChar
-	b1 <- movePeices c b
+	b1 <- movePieces c b
 	if b == b1 then
 		mainLoop b1
 	else
 		do
-			b2 <- addRandomPeice b1
+			b2 <- addRandomPiece b1
 			mainLoop b2
 
 startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff IO ()
 startGame = do
 	srand $ prim__zextInt_BigInt !time
-	initialBoard <- addRandomPeice $ replicate _ (replicate _ Nothing)
+	initialBoard <- addRandomPiece $ replicate _ (replicate _ Nothing)
 	mainLoop initialBoard
 	return ()
 	
