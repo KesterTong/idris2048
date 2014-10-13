@@ -92,33 +92,10 @@ unFlattenArray {n=(S k)}{m=l} xs = let (ys, zs) = split' {n=l}{m=k*l} xs in
   (ys :: (unFlattenArray zs))
 
 ||| Find the indices of all elements of a vector that satisfy some test
-total findIndicesFin : (a -> Bool) -> Vect n a -> (k ** Vect k (Fin n))
-findIndicesFin f [] = (_ ** [])
-findIndicesFin f (x::xs) with (findIndicesFin f xs)
-      | (_ ** tail) =
-       if f x then
-        (_ ** fZ::(map fS tail))
-       else
-        (_ ** (map fS tail))
-
-||| selects a random element in a finite set of given size
-||| 
-||| Unlike the function Effects.Random.rndFin, rndFin' k takes all possible
-||| values in Fin (S k).  That is, it takes values 0,1,...,k.
-rndFin' : (k : Nat) -> { [RND] } Eff m (Fin (S k))
-rndFin' k = do x <- rndFin (S k)
-               return (fixStrengthened (strengthen x))
-  where fixStrengthened : Either (Fin (S (S n))) (Fin (S n)) -> Fin (S n)
-        fixStrengthened (Left _)  = fZ
-        fixStrengthened (Right y) = y
-
-||| Select a random element from a vector.
-||| 
-||| Selects a random element from a vector, or raises an exception
-||| if the array is empty.
-selectRandom : Vect n a -> {[RND, EXCEPTION String]} Eff IO (a)
-selectRandom {n=Z}     _  = raise "Game Over"
-selectRandom {n=(S k)} xs = return (Vect.index !(rndFin' k)  xs)
+total findIndicesFin : (a -> Bool) -> Vect n a -> List (Fin n)
+findIndicesFin f [] = []
+findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
+  if f x then (fZ :: tail) else tail
 
 --------------------------------------------------------------------------------
 -- Display functions
@@ -145,19 +122,26 @@ Board = Vect 4 (Vect 4 (Maybe Int))
 
 data Direction = Left | Right | Up | Down
 
+-- For some reason, map isn't working with Vect, so I define my own
+vmap : (a -> b) -> Vect n a -> Vect n b
+vmap _ [] = []
+vmap f (x::xs) = (f x)::(vmap f xs)
+
 move : (Eq a, Num a) => Direction -> Vect m (Vect n (Maybe a)) -> Vect m (Vect n (Maybe a))
-move Left  = map basicRowOperation
-move Right = map (reverse . basicRowOperation . reverse)
+move Left  = vmap basicRowOperation
+move Right = vmap (reverse . basicRowOperation . reverse)
 move Up    = transposeArray . (move Left) . transposeArray
 move Down  = transposeArray . (move Right) . transposeArray
 
-addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff IO (Board)
-addRandomPiece arr =
-  let flattened = flattenArray arr in
-    let (_ ** maybeIndices) = findIndicesFin isNothing flattened in
-      do
-        insertionIndex <- selectRandom maybeIndices
-        return (unFlattenArray (replaceAt insertionIndex (Just 2) flattened))
+addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff Board
+addRandomPiece arr = case !(rndSelect indices) of
+    Nothing => raise "Game Over"
+    Just idx => return (unFlattenArray (replaceAt idx (Just 2) flattened))
+  where
+    flattened : Vect 16 (Maybe Int)
+    flattened = flattenArray arr
+    indices : List (Fin 16)
+    indices = findIndicesFin isNothing flattened
 
 data UserAction = Quit | Invalid | Move Direction
 
@@ -169,11 +153,11 @@ getAction 's' = Move Down
 getAction 'x' = Quit
 getAction _   = Invalid
 
-mainLoop : Board -> {[RND, STDIO, EXCEPTION String]} Eff IO (Board)
+mainLoop : Board -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
 mainLoop b = do putStrLn (showBoard b)
                 c <- getChar
                 performAction (getAction c)
-    where performAction : UserAction -> {[RND, STDIO, EXCEPTION String]} Eff IO (Board)
+    where performAction : UserAction -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
           performAction Quit       = raise "You have quit"
           performAction Invalid    = mainLoop b
           performAction (Move dir) = let b' = move dir b in
@@ -184,7 +168,7 @@ mainLoop b = do putStrLn (showBoard b)
                 b'' <- addRandomPiece b'
                 mainLoop b''
 
-startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff IO ()
+startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff ()
 startGame = do
   srand $ prim__zextInt_BigInt !time
   initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
