@@ -115,8 +115,8 @@ showBoard (x::xs) = (showRow x) ++ (showBoard xs)
 JSEvent : Type
 JSEvent = Int
 
-continue : (JSEvent -> IO b) -> IO ()
-continue {b} cb = mkForeign (FFun "idris_interface.add_callback(%0)" [FFunction FInt (FAny (IO b))] FUnit) cb
+getNextEvent : (JSEvent -> IO ()) -> IO ()
+getNextEvent cb = mkForeign (FFun "idris_interface.get_next_event(%0)" [FFunction FInt (FAny (IO ()))] FUnit) cb
 
 display : String -> IO ()
 display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
@@ -124,7 +124,7 @@ display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
 runLoop : a -> (a -> Int -> a) -> (a -> String) -> IO ()
 runLoop init trans view = do
   display (view init)
-  continue (\x => runLoop (trans init x) trans view)
+  getNextEvent (\x => runLoop (trans init x) trans view)
 
 --------------------------------------------------------------------------------
 -- High level game logic

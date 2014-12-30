@@ -15,7 +15,7 @@ IdrisInterface.prototype.on_keydown_ = function(e) {
 	}
 }
 
-IdrisInterface.prototype.add_callback = function(callback) {
+IdrisInterface.prototype.get_next_event = function(callback) {
 	if (this.events_.length > 0) {
 		var e = this.events_.shift();
 		callback(this.events_.shift());	
