@@ -5,19 +5,20 @@ This project will be much easier to understand if you are familiar with Haskell.
 ##Compiling and Running
 After installing Idris and cloning this repo, you can type in the console (instructions for OSX)
 ```bash
-idris game.idr -o game -p effects
+idris --codegen javascript game.idr -o game.js
 ```
-This compiles the file game.idr, to the executable file game.  The flag -p effects instructs the compiler
-to user the Effect library, which is needed for IO, exceptions, and random number generation.
+This compiles the file game.idr to JavaScript.  JavaScript is used so that the UI can be done in the browser.
 
 To play the game, type
 ```bash
-./game
+python -m SimpleHTTPServer
 ```
+then navigate to ```http://localhost:8000/game.html```.
 
-The keys are a, s, d, and w for moving, and x for quit.  Currently, there is no code
-to detect winning or losing the game, and the UI is somewhat quirky, but it is good
-enough to see that the basic logic of the game is working.
+Currently, there is no code to detect winning or losing the game,
+and the new tile is always a 2 and always appears in the top left.
+However, the basic logic of the game is working and this project
+is mainly for studying Idris.
 
 ##Discussion
 This section discusses the code, with emphasis on the effects of the dependent type system.

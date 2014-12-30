@@ -1,8 +1,3 @@
-import Effect.Exception
-import Effect.StdIO
-import Effect.Random
-import Effect.System
-
 --------------------------------------------------------------------------------
 -- Operations on individual rows
 --------------------------------------------------------------------------------
@@ -133,47 +128,56 @@ move Right = vmap (reverse . basicRowOperation . reverse)
 move Up    = transposeArray . (move Left) . transposeArray
 move Down  = transposeArray . (move Right) . transposeArray
 
-addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff Board
-addRandomPiece arr = case !(rndSelect indices) of
-    Nothing => raise "Game Over"
-    Just idx => return (unFlattenArray (replaceAt idx (Just 2) flattened))
+||| Not actually random, just selects the first element!
+prndSelect : List a -> Maybe a
+prndSelect []      = Nothing
+prndSelect (x::xs) = Just x
+
+addRandomPiece : Board -> Board
+addRandomPiece arr = case (prndSelect indices) of
+    Nothing => arr
+    Just idx => unFlattenArray (replaceAt idx (Just 2) flattened)
   where
     flattened : Vect 16 (Maybe Int)
     flattened = flattenArray arr
     indices : List (Fin 16)
     indices = findIndicesFin isNothing flattened
 
-data UserAction = Quit | Invalid | Move Direction
+data UserAction = Invalid | Move Direction
 
-getAction : Char -> UserAction
-getAction 'a' = Move Left
-getAction 'd' = Move Right
-getAction 'w' = Move Up
-getAction 's' = Move Down
-getAction 'x' = Quit
+getAction : Int -> UserAction
+getAction 37 = Move Left
+getAction 38 = Move Up
+getAction 39 = Move Right
+getAction 40 = Move Down
 getAction _   = Invalid
 
-mainLoop : Board -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
-mainLoop b = do putStrLn (showBoard b)
-                c <- getChar
-                performAction (getAction c)
-    where performAction : UserAction -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
-          performAction Quit       = raise "You have quit"
-          performAction Invalid    = mainLoop b
-          performAction (Move dir) = let b' = move dir b in
-            if b == b' then
-              mainLoop b'
-            else
-              do
-                b'' <- addRandomPiece b'
-                mainLoop b''
+--------------------------------------------------------------------------------
+-- JavaScript IO
+--------------------------------------------------------------------------------
 
-startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff ()
-startGame = do
-  srand $ prim__zextInt_BigInt !time
-  initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
-  mainLoop initialBoard
-  return ()	
+JSEvent : Type
+JSEvent = Int
+
+continue : (JSEvent -> IO b) -> IO ()
+continue {b} cb = mkForeign (FFun "idris_interface.add_callback(%0)" [FFunction FInt (FAny (IO b))] FUnit) cb
+
+display : String -> IO ()
+display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
+
+mainLoop : Board -> IO ()
+mainLoop b = do display (showBoard b)
+                continue (mainLoop . performAction . getAction)
+  where
+    performAction : UserAction -> Board
+    performAction Invalid    = b
+    performAction (Move dir) = let b' = move dir b in
+      if b == b' then
+        b'
+      else
+        (addRandomPiece b')
 
 main : IO ()
-main = run startGame
+main = do
+  mainLoop (addRandomPiece (replicate _ (replicate _ Nothing)))
+  return ()
