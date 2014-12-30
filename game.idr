@@ -109,6 +109,24 @@ showBoard []      = ""
 showBoard (x::xs) = (showRow x) ++ "\n" ++ (showBoard xs)
 
 --------------------------------------------------------------------------------
+-- JavaScript Engine
+--------------------------------------------------------------------------------
+
+JSEvent : Type
+JSEvent = Int
+
+continue : (JSEvent -> IO b) -> IO ()
+continue {b} cb = mkForeign (FFun "idris_interface.add_callback(%0)" [FFunction FInt (FAny (IO b))] FUnit) cb
+
+display : String -> IO ()
+display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
+
+runLoop : a -> (a -> Int -> a) -> (a -> String) -> IO ()
+runLoop init trans view = do
+  display (view init)
+  continue (\x => runLoop (trans init x) trans view)
+
+--------------------------------------------------------------------------------
 -- High level game logic
 --------------------------------------------------------------------------------
 
@@ -152,22 +170,11 @@ getAction 39 = Move Right
 getAction 40 = Move Down
 getAction _   = Invalid
 
---------------------------------------------------------------------------------
--- JavaScript IO
---------------------------------------------------------------------------------
+initialState : Board
+initialState = addRandomPiece (replicate _ (replicate _ Nothing))
 
-JSEvent : Type
-JSEvent = Int
-
-continue : (JSEvent -> IO b) -> IO ()
-continue {b} cb = mkForeign (FFun "idris_interface.add_callback(%0)" [FFunction FInt (FAny (IO b))] FUnit) cb
-
-display : String -> IO ()
-display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
-
-mainLoop : Board -> IO ()
-mainLoop b = do display (showBoard b)
-                continue (mainLoop . performAction . getAction)
+transitionFunction : Board -> Int -> Board
+transitionFunction b = performAction . getAction
   where
     performAction : UserAction -> Board
     performAction Invalid    = b
@@ -178,6 +185,4 @@ mainLoop b = do display (showBoard b)
         (addRandomPiece b')
 
 main : IO ()
-main = do
-  mainLoop (addRandomPiece (replicate _ (replicate _ Nothing)))
-  return ()
+main = runLoop initialState transitionFunction showBoard
