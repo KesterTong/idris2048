@@ -1,6 +1,48 @@
+<head>
+<style>
+.row {
+    clear:both;
+    height: 22px;
+} 
+.cell {
+    float: left;
+    width: 20px;
+    height: 20px;
+    margin-right: 2px;
+    background-color: lightblue;
+    text-align: center;
+    vertical-align: middle;
+} 
+</style>
+</head>
 <body>
 	<div>Use arrow keys to move</div>
-	<pre id="game-area" tabindex="0" autofocus></pre>
+	<div id="game-area" tabindex="0">
+		<div id="row0" class="row">
+			<div id="00" class="cell"></div>
+			<div id="01" class="cell"></div>
+			<div id="02" class="cell"></div>
+			<div id="03" class="cell"></div>
+		</div>
+		<div id="row1" class="row">
+			<div id="10" class="cell"></div>
+			<div id="11" class="cell"></div>
+			<div id="12" class="cell"></div>
+			<div id="13" class="cell"></div>
+		</div>
+		<div id="row2" class="row">
+			<div id="20" class="cell"></div>
+			<div id="21" class="cell"></div>
+			<div id="22" class="cell"></div>
+			<div id="23" class="cell"></div>
+		</div>
+		<div id="row3" class="row"s>
+			<div id="30" class="cell"></div>
+			<div id="31" class="cell"></div>
+			<div id="32" class="cell"></div>
+			<div id="33" class="cell"></div>
+		</div>
+	</div>
 	<!-- code to set the default input focus -->
 	<script>
   		document.getElementById('game-area').focus();

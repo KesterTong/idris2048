@@ -25,7 +25,13 @@ IdrisInterface.prototype.add_callback = function(callback) {
 }
 
 IdrisInterface.prototype.show = function(str) {
-	this.element_.innerHTML = str;
+	for (var i = 0; i < 4; i++) {
+		for (var j = 0; j < 4; j++) {
+			console.log("" + i + "" + j)
+			var value = Math.pow(2, str[4 * i + j]);
+			document.getElementById("" + i + "" + j).innerHTML = value || ''
+		}
+	}
 }
 
 var idris_interface = new IdrisInterface(document.getElementById('game-area'));

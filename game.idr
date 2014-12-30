@@ -35,7 +35,7 @@ filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
 collapsePairs (x::x'::xs) = 
   if x == x' then
-    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (lteSucc w)))
+    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((x + 1) :: ys, lteSuccR (lteSucc w)))
   else
      let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, lteSucc w))
 collapsePairs (x::[])     = (_ ** ([x], lteSucc lteZero))
@@ -97,16 +97,16 @@ findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
 --------------------------------------------------------------------------------
 
 showValue : Show a => Maybe a -> String
-showValue Nothing  = "...."
-showValue (Just x) = pack (List.take 4 (unpack ((show x) ++ "....")))
+showValue Nothing  = "."
+showValue (Just x) = show x
 
 showRow : Show a => Vect n (Maybe a) -> String
 showRow []      = ""
-showRow (x::xs) = (showValue x) ++ " " ++ (showRow xs)
+showRow (x::xs) = (showValue x) ++ (showRow xs)
 
 showBoard : Show a => Vect m (Vect n (Maybe a)) -> String
 showBoard []      = ""
-showBoard (x::xs) = (showRow x) ++ "\n" ++ (showBoard xs)
+showBoard (x::xs) = (showRow x) ++ (showBoard xs)
 
 --------------------------------------------------------------------------------
 -- JavaScript Engine
@@ -154,7 +154,7 @@ prndSelect (x::xs) = Just x
 addRandomPiece : Board -> Board
 addRandomPiece arr = case (prndSelect indices) of
     Nothing => arr
-    Just idx => unFlattenArray (replaceAt idx (Just 2) flattened)
+    Just idx => unFlattenArray (replaceAt idx (Just 1) flattened)
   where
     flattened : Vect 16 (Maybe Int)
     flattened = flattenArray arr
