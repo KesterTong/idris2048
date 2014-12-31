@@ -1,10 +1,25 @@
-var IdrisInterface = function(element) {
+var IdrisInterface = function(element, grid_size) {
 	this.callbacks_ = [];
 	this.events_ = [];
 	this.element_ = element;
 
+	/**
+	 * Array of grid cells, arranged in row major format
+	 */
+	this.cells_ = this.get_cells_(grid_size);
+
 	var that = this;
 	element.addEventListener('keydown', function(e) {that.on_keydown_(e)});
+}
+
+IdrisInterface.prototype.get_cells_ = function(grid_size) {
+	var cells = [];
+	for (var i = 0; i < grid_size; i++) {
+		for (var j = 0; j < grid_size; j++) {
+			cells.push(document.getElementById("" + i + "" + j));
+		}
+	}
+	return cells;
 }
 
 IdrisInterface.prototype.on_keydown_ = function(e) {
@@ -25,12 +40,15 @@ IdrisInterface.prototype.get_next_event = function(callback) {
 }
 
 IdrisInterface.prototype.show = function(str) {
-	for (var i = 0; i < 4; i++) {
-		for (var j = 0; j < 4; j++) {
-			var value = Math.pow(2, str.charCodeAt(4 * i + j));
-			document.getElementById("" + i + "" + j).innerHTML = value === 1 ? '' : value
-		}
+	if (str.length != this.cells_.length) {
+		console.error('str had different length to the number of cells');
+		return;
+	}
+	for (var i = 0; i < str.length; i++) {
+		var cell_value = str.charCodeAt(i)
+		var cell_html = cell_value == 0 ? '' : Math.pow(2, cell_value);
+		this.cells_[i].innerHTML = cell_html;
 	}
 }
 
-var idris_interface = new IdrisInterface(document.getElementById('game-area'));
+var idris_interface = new IdrisInterface(document.getElementById('game-area'), 4);
