@@ -5,6 +5,8 @@ This project will be much easier to understand if you are familiar with Haskell.
 ##Compiling and Running
 After installing Idris and cloning this repo, you can type in the console (instructions for OSX)
 ```bash
+idris --build tilinggameengine.ipkg
+idris --install tilinggameengine.ipkg
 idris --codegen javascript game.idr -o game.js
 ```
 This compiles the file game.idr to JavaScript.  JavaScript is used so that the UI can be done in the browser.
