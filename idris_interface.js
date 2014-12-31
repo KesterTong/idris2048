@@ -6,7 +6,8 @@
  *
  * @param {Element} element The DOM element that contains the view.
  * @param {Object} options Dictionary with the following keys:
- *    grid_size: The size of the grid to create.
+ *    rows: The number of rows in the grid
+ *    cols: The number of columns in the grid
  */
 var GridView = function(element, options) {
 	this.element_ = element;
@@ -14,7 +15,7 @@ var GridView = function(element, options) {
 	/**
 	 * Array of grid cells, arranged in row major format
 	 */
-	this.cells_ = this.create_cells_(options.width, options.height);
+	this.cells_ = this.create_cells_(options.rows, options.cols);
 };
 
 /**
@@ -34,12 +35,12 @@ GridView.prototype.show = function(str) {
 	}
 };
 
-GridView.prototype.create_cells_ = function(grid_size) {
+GridView.prototype.create_cells_ = function(rows, cols) {
 	var cells = [];
-	for (var i = 0; i < grid_size; i++) {
+	for (var i = 0; i < rows; i++) {
 		var row = document.createElement('div');
 		row.className = 'row';
-		for (var j = 0; j < grid_size; j++) {
+		for (var j = 0; j < cols; j++) {
 			var cell = document.createElement('div');
 			cell.className = 'cell';
 			cells.push(cell);
@@ -78,14 +79,14 @@ IdrisInterface.prototype.get_next_event = function(callback) {
 	}	
 }
 
-IdrisInterface.prototype.init_display = function(width, height) {
+IdrisInterface.prototype.init_display = function(rows, cols) {
 	if (this.grid_view_ != null) {
 		console.error('init_display can only be called once');
 		return;
 	}
 	var options = {
-		width: width,
-		height: height
+		rows: rows,
+		cols: cols
 	};
 	this.grid_view_ = new GridView(this.element_, options);
 }

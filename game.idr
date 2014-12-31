@@ -147,11 +147,17 @@ startEventLoop (mkGridSize m n) init trans view = do
 -- High level game logic
 --------------------------------------------------------------------------------
 
+mm : Nat
+mm = 5
+
+nn : Nat
+nn = 7
+
 Board : Type
-Board = Vect 4 (Vect 4 (Maybe Int))
+Board = Vect mm (Vect nn (Maybe Int))
 
 gridSize : GridSize
-gridSize = mkGridSize 4 4;
+gridSize = mkGridSize mm nn;
 
 gridForState : Board -> (CellGrid gridSize)
 gridForState = map (map (maybe 0 (\x => x)))
@@ -174,9 +180,9 @@ addRandomPiece arr = case (prndSelect indices) of
     Nothing => arr
     Just idx => unFlattenArray (replaceAt idx (Just 1) flattened)
   where
-    flattened : Vect 16 (Maybe Int)
+    flattened : Vect (mm * nn) (Maybe Int)
     flattened = flattenArray arr
-    indices : List (Fin 16)
+    indices : List (Fin (mm * nn))
     indices = findIndicesFin isNothing flattened
 
 data UserAction = Invalid | Move Direction
