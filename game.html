@@ -20,9 +20,12 @@
 	<div id="game-area" tabindex="0">
 	</div>
 	<!-- code to set the default input focus -->
-	<script>
-  		document.getElementById('game-area').focus();
-	</script>
+	<script src="grid_view.js"></script>
 	<script src="idris_interface.js"></script>
+	<script>
+		var el = document.getElementById('game-area');
+		var idris_interface = new IdrisInterface(document.getElementById('game-area'));
+		el.focus();
+	</script>
 	<script src="game.js"></script>
 </body>
