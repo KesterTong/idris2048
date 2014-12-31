@@ -135,15 +135,11 @@ runLoop size init trans view = do
 Board : Type
 Board = Vect 4 (Vect 4 (Maybe Int))
 
-showValue : Maybe Int -> Int
-showValue Nothing  = 0
-showValue (Just x) = x
-
 gridSize : GridSize
 gridSize = mkGridSize 4 4;
 
 gridForState : Board -> (CellGrid gridSize)
-gridForState = map (map showValue)
+gridForState = map (map (maybe 0 (\x => x)))
 
 data Direction = Left | Right | Up | Down
 
