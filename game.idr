@@ -108,8 +108,9 @@ toIntNat n = toIntNat' n 0 where
   toIntNat' Z     x = x
   toIntNat' (S n) x = toIntNat' n (x + 1)
 
+-- It should be possible to use Effect.Rand.  But for now, the functionaly
+-- is replicated here without using monads.
 
--- It should be possible to use Effect.Rand.
 nextRnd : Integer -> Integer
 nextRnd x = assert_total $ (1664525 * x + 1013904223) `prim__sremBigInt` (pow 2 32)
 
