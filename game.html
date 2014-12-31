@@ -23,9 +23,12 @@
 	<script src="grid_view.js"></script>
 	<script src="idris_interface.js"></script>
 	<script>
-		var el = document.getElementById('game-area');
-		var idris_interface = new IdrisInterface(document.getElementById('game-area'));
-		el.focus();
+		var idris_interface = function() {
+			var el = document.getElementById('game-area');
+			var idris_interface = new IdrisInterface(el);
+			el.focus();
+			return idris_interface;
+		} ();
 	</script>
 	<script src="game.js"></script>
 </body>
