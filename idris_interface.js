@@ -14,7 +14,7 @@ var GridView = function(element, options) {
 	/**
 	 * Array of grid cells, arranged in row major format
 	 */
-	this.cells_ = this.create_cells_(options.grid_size);
+	this.cells_ = this.create_cells_(options.width, options.height);
 };
 
 /**
@@ -34,10 +34,6 @@ GridView.prototype.show = function(str) {
 	}
 };
 
-GridView.prototype.element = function() {
-	return this.element_;
-};
-
 GridView.prototype.create_cells_ = function(grid_size) {
 	var cells = [];
 	for (var i = 0; i < grid_size; i++) {
@@ -54,13 +50,14 @@ GridView.prototype.create_cells_ = function(grid_size) {
 	return cells;
 };
 
-var IdrisInterface = function(grid_view) {
+var IdrisInterface = function(element) {
 	this.callbacks_ = [];
 	this.events_ = [];
-	this.grid_view_ = grid_view;
+	this.element_ = element;
+	this.grid_view_ = null;
 
 	var that = this;
-	grid_view.element().addEventListener('keydown', function(e) {that.on_keydown_(e)});
+	element.addEventListener('keydown', function(e) {that.on_keydown_(e)});
 };
 
 
@@ -81,14 +78,24 @@ IdrisInterface.prototype.get_next_event = function(callback) {
 	}	
 }
 
+IdrisInterface.prototype.init_display = function(width, height) {
+	if (this.grid_view_ != null) {
+		console.error('init_display can only be called once');
+		return;
+	}
+	var options = {
+		width: width,
+		height: height
+	};
+	this.grid_view_ = new GridView(this.element_, options);
+}
+
 IdrisInterface.prototype.show = function(str) {
+	if (this.grid_view_ == null) {
+		console.error('init_display must be called before show');
+		return;
+	}
 	this.grid_view_.show(str);
 }
 
-var options = {
-	grid_size: 4
-};
-
-var grid_view = new GridView(document.getElementById('game-area'), options);
-
-var idris_interface = new IdrisInterface(grid_view);
+var idris_interface = new IdrisInterface(document.getElementById('game-area'));

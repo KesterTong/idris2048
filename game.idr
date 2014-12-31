@@ -101,6 +101,13 @@ vmap : (a -> b) -> Vect n a -> Vect n b
 vmap _ [] = []
 vmap f (x::xs) = (f x)::(vmap f xs)
 
+
+toIntNat : Nat -> Int
+toIntNat n = toIntNat' n 0 where
+  toIntNat' : Nat -> Int -> Int
+  toIntNat' Z     x = x
+  toIntNat' (S n) x = toIntNat' n (x + 1)
+
 --------------------------------------------------------------------------------
 -- JavaScript Engine
 --------------------------------------------------------------------------------
@@ -120,13 +127,21 @@ JSEvent = Int
 getNextEvent : (JSEvent -> IO ()) -> IO ()
 getNextEvent cb = mkForeign (FFun "idris_interface.get_next_event(%0)" [FFunction FInt (FAny (IO ()))] FUnit) cb
 
+initDisplay : Int -> Int -> IO ()
+initDisplay m n = mkForeign (FFun "idris_interface.init_display(%0, %1)" [FInt, FInt] FUnit) m n
+
 display : String -> IO ()
 display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
 
-runLoop : (size : GridSize) -> a -> (a -> Int -> a) -> (a -> (CellGrid size)) -> IO ()
-runLoop size init trans view = do
-  display (EncodeGrid size (view init))
-  getNextEvent (\x => runLoop size (trans init x) trans view)
+runEventLoop : (size : GridSize) -> a -> (a -> Int -> a) -> (a -> (CellGrid size)) -> IO ()
+runEventLoop (mkGridSize m n) init trans view = do
+  display (EncodeGrid (mkGridSize m n) (view init))
+  getNextEvent (\x => runEventLoop (mkGridSize m n) (trans init x) trans view)
+
+startEventLoop : (size : GridSize) -> a -> (a -> Int -> a) -> (a -> (CellGrid size)) -> IO ()
+startEventLoop (mkGridSize m n) init trans view = do
+  initDisplay (toIntNat m) (toIntNat n)
+  runEventLoop (mkGridSize m n) init trans view
 
 --------------------------------------------------------------------------------
 -- High level game logic
@@ -188,4 +203,4 @@ transitionFunction b = performAction . getAction
         (addRandomPiece b')
 
 main : IO ()
-main = runLoop gridSize initialState transitionFunction gridForState
+main = startEventLoop gridSize initialState transitionFunction gridForState
