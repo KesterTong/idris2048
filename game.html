@@ -17,15 +17,23 @@
 </head>
 <body>
 	<div>Use arrow keys to move</div>
-	<div id="game-area" tabindex="0">
-	</div>
+	<canvas id="game-area"  tabindex="0" width="400" height="400">
+	</canvas>
 	<!-- code to set the default input focus -->
 	<script src="grid_view.js"></script>
 	<script src="idris_interface.js"></script>
+
+
 	<script>
+		var tileset_options = {
+			cols: 4,
+			filename: 'tileset.png',
+			tile_width: 122,
+			tile_height: 122
+		}
 		var idris_interface = function() {
 			var el = document.getElementById('game-area');
-			var idris_interface = new IdrisInterface(el);
+			var idris_interface = new IdrisInterface(el, tileset_options);
 			el.focus();
 			return idris_interface;
 		} ();

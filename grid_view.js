@@ -8,14 +8,31 @@
  * @param {Object} options Dictionary with the following keys:
  *    rows: The number of rows in the grid
  *    cols: The number of columns in the grid
+ *    tileset.cols: The number of columns in the tileset
+ *    tileset.filename: The file name of the tileset
+ *    tileset.tile_width: The width of a tile
+ *    tileset.tile_height: The height of a tile
  */
 var GridView = function(element, options) {
 	this.element_ = element;
+	this.element_.width = options.cols * options.tileset.tile_width;
+	this.element_.height = options.rows * options.tileset.tile_height;
 
-	/**
-	 * Array of grid cells, arranged in row major format
-	 */
-	this.cells_ = this.create_cells_(options.rows, options.cols);
+	this.tileset_image_ = new Image();
+	this.tileset_image_.src = options.tileset.filename;
+	var that = this;
+	this.tileset_image_loaded_ = false;
+	this.tileset_image_.onload = function() {
+		that.tileset_image_loaded_ = true;
+	};
+
+	this.context_ = element.getContext('2d');
+
+	this.rows_ = options.rows;
+	this.cols_ = options.cols;
+	this.tilset_cols_ = options.tileset.cols;
+	this.tile_width_ = options.tileset.tile_width;
+	this.tile_height_ = options.tileset.tile_height;
 };
 
 /**
@@ -24,29 +41,29 @@ var GridView = function(element, options) {
  *   each cell, in row major order.
  */
 GridView.prototype.show = function(str) {
-	if (str.length != this.cells_.length) {
+	if (str.length != this.rows_ * this.cols_) {
 		console.error('str had different length to the number of cells');
 		return;
 	}
-	for (var i = 0; i < str.length; i++) {
-		var cell_value = str.charCodeAt(i)
-		var cell_html = cell_value == 0 ? '' : Math.pow(2, cell_value);
-		this.cells_[i].innerHTML = cell_html;
+	// If image hasn't loaded, call this function again when it has.
+	if (!this.tileset_image_loaded_) {
+		var that = this;
+		this.tileset_image_.onload = function() {
+			that.show(str);
+			that.tileset_image_loaded_ = true;
+		};
 	}
-};
 
-GridView.prototype.create_cells_ = function(rows, cols) {
-	var cells = [];
-	for (var i = 0; i < rows; i++) {
-		var row = document.createElement('div');
-		row.className = 'row';
-		for (var j = 0; j < cols; j++) {
-			var cell = document.createElement('div');
-			cell.className = 'cell';
-			cells.push(cell);
-			row.appendChild(cell);
+	var w = this.tile_width_;
+	var h = this.tile_height_;
+
+	for (var r = 0; r < this.rows_; r++) {
+		for (var c = 0; c < this.cols_; c++) {
+			var i = r * this.cols_ + c;
+			var tile_idx = str.charCodeAt(i);
+			var tr = Math.floor(tile_idx / this.tilset_cols_); // Bitwise OR operation
+			var tc = tile_idx % this.tilset_cols_;
+			this.context_.drawImage(this.tileset_image_, tc * w, tr * h, w, h, c * w, r * h, w, h);
 		}
-		this.element_.appendChild(row);
 	}
-	return cells;
 };

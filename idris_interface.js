@@ -1,10 +1,11 @@
 
 
-var IdrisInterface = function(element) {
+var IdrisInterface = function(element, tileset_options) {
 	this.callbacks_ = [];
 	this.events_ = [];
 	this.element_ = element;
 	this.grid_view_ = null;
+	this.tileset_options_ = tileset_options;
 
 	var that = this;
 	element.addEventListener('keydown', function(e) {that.on_keydown_(e)});
@@ -35,7 +36,8 @@ IdrisInterface.prototype.init_display = function(rows, cols) {
 	}
 	var options = {
 		rows: rows,
-		cols: cols
+		cols: cols,
+		tileset: this.tileset_options_
 	};
 	this.grid_view_ = new GridView(this.element_, options);
 }

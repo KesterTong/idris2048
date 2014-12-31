@@ -160,7 +160,7 @@ gridSize : GridSize
 gridSize = mkGridSize mm nn;
 
 gridForState : Board -> (CellGrid gridSize)
-gridForState = map (map (maybe 0 (\x => x)))
+gridForState = map (map (maybe 15 (\x => x)))
 
 data Direction = Left | Right | Up | Down
 
@@ -178,7 +178,7 @@ prndSelect (x::xs) = Just x
 addRandomPiece : Board -> Board
 addRandomPiece arr = case (prndSelect indices) of
     Nothing => arr
-    Just idx => unFlattenArray (replaceAt idx (Just 1) flattened)
+    Just idx => unFlattenArray (replaceAt idx (Just 0) flattened)
   where
     flattened : Vect (mm * nn) (Maybe Int)
     flattened = flattenArray arr
