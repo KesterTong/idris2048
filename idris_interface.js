@@ -1,12 +1,27 @@
-var GridView = function(element, grid_size) {
+/**
+ * Manages the grid of cells.
+ *
+ * Creates an grid of cells, and updates the state of the grid according
+ * to a string describing the state of each cell.
+ *
+ * @param {Element} element The DOM element that contains the view.
+ * @param {Object} options Dictionary with the following keys:
+ *    grid_size: The size of the grid to create.
+ */
+var GridView = function(element, options) {
 	this.element_ = element;
 
 	/**
 	 * Array of grid cells, arranged in row major format
 	 */
-	this.cells_ = this.create_cells_(grid_size);
+	this.cells_ = this.create_cells_(options.grid_size);
 };
 
+/**
+ * Update the view.
+ * @param {string} str A string containing the state of
+ *   each cell, in row major order.
+ */
 GridView.prototype.show = function(str) {
 	if (str.length != this.cells_.length) {
 		console.error('str had different length to the number of cells');
@@ -70,7 +85,10 @@ IdrisInterface.prototype.show = function(str) {
 	this.grid_view_.show(str);
 }
 
+var options = {
+	grid_size: 4
+};
 
-var grid_view = new GridView(document.getElementById('game-area'), 4);
+var grid_view = new GridView(document.getElementById('game-area'), options);
 
 var idris_interface = new IdrisInterface(grid_view);
