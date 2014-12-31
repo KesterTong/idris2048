@@ -202,11 +202,6 @@ move Right = vmap (reverse . basicRowOperation . reverse)
 move Up    = transposeArray . (move Left) . transposeArray
 move Down  = transposeArray . (move Right) . transposeArray
 
-||| Not actually random, just selects the first element!
-prndSelect : List a -> Maybe a
-prndSelect []      = Nothing
-prndSelect (x::xs) = Just x
-
 addRandomPiece : (Board, Integer) -> (Board, Integer)
 addRandomPiece (arr, i) = let (i', x) = rndSelect i indices in case x of
     Nothing => (arr, i')
