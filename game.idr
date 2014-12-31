@@ -93,7 +93,7 @@ findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
   if f x then (fZ :: tail) else tail
 
 --------------------------------------------------------------------------------
--- Fix for strange error with Vector.map
+-- Replicating some functions from std library
 --------------------------------------------------------------------------------
 
 -- For some reason, map isn't working with Vect, so I define my own
@@ -107,6 +107,37 @@ toIntNat n = toIntNat' n 0 where
   toIntNat' : Nat -> Int -> Int
   toIntNat' Z     x = x
   toIntNat' (S n) x = toIntNat' n (x + 1)
+
+
+-- It should be possible to use Effect.Rand.
+nextRnd : Integer -> Integer
+nextRnd x = assert_total $ (1664525 * x + 1013904223) `prim__sremBigInt` (pow 2 32)
+
+||| Generates a random Integer in a given range
+rndInt : (rng : Integer) -> Integer -> Integer -> (Integer, Integer)
+rndInt rng lower upper = (nextRnd rng, (rng `prim__sremBigInt` (upper - lower)) + lower)
+
+||| Generate a random number in Fin (S `k`)
+|||
+||| Note that rndFin k takes values 0, 1, ..., k.
+rndFin : (rng : Integer) -> (k : Nat) -> (Integer, Fin (S k))
+rndFin rng k = assert_total $ let (rng', x) = rndInt rng 0 (toIntegerNat  (S k))
+    in (rng', toFin x)
+ where toFin : Integer -> Fin (S k)
+       toFin x = case integerToFin x (S k) of
+                      Just v => v
+                      Nothing => toFin (assert_smaller x (x - cast (S k)))
+
+||| Select a random element from a vector
+rndSelect' : (rng : Integer) -> Vect (S k) a -> (Integer, a)
+rndSelect' {k} rng xs = let (rng', idx) = rndFin rng k in
+  (rng', Vect.index idx xs)
+
+||| Select a random element from a list, or Nothing if the list is empty
+rndSelect : (rng : Integer) -> List a -> (Integer, Maybe a)
+rndSelect rng []      = (rng, Nothing)
+rndSelect rng (x::xs) = let (rng', x) = rndSelect' rng (x::(fromList xs)) in
+  (rng', Just x)
 
 --------------------------------------------------------------------------------
 -- JavaScript Engine
@@ -159,8 +190,8 @@ Board = Vect mm (Vect nn (Maybe Int))
 gridSize : GridSize
 gridSize = mkGridSize mm nn;
 
-gridForState : Board -> (CellGrid gridSize)
-gridForState = map (map (maybe 15 (\x => x)))
+gridForState : (Board, Integer) -> (CellGrid gridSize)
+gridForState (b, i) = map (map (maybe 15 (\x => x))) b
 
 data Direction = Left | Right | Up | Down
 
@@ -175,10 +206,10 @@ prndSelect : List a -> Maybe a
 prndSelect []      = Nothing
 prndSelect (x::xs) = Just x
 
-addRandomPiece : Board -> Board
-addRandomPiece arr = case (prndSelect indices) of
-    Nothing => arr
-    Just idx => unFlattenArray (replaceAt idx (Just 0) flattened)
+addRandomPiece : (Board, Integer) -> (Board, Integer)
+addRandomPiece (arr, i) = let (i', x) = rndSelect i indices in case x of
+    Nothing => (arr, i')
+    Just idx => (unFlattenArray (replaceAt idx (Just 0) flattened), i')
   where
     flattened : Vect (mm * nn) (Maybe Int)
     flattened = flattenArray arr
@@ -194,19 +225,19 @@ getAction 39 = Move Right
 getAction 40 = Move Down
 getAction _   = Invalid
 
-initialState : Board
-initialState = addRandomPiece (replicate _ (replicate _ Nothing))
+initialState : (Board, Integer)
+initialState = addRandomPiece (replicate _ (replicate _ Nothing), 0)
 
-transitionFunction : Board -> Int -> Board
-transitionFunction b = performAction . getAction
+transitionFunction : (Board, Integer) -> Int -> (Board, Integer)
+transitionFunction (b, i) = performAction . getAction
   where
-    performAction : UserAction -> Board
-    performAction Invalid    = b
+    performAction : UserAction -> (Board, Integer)
+    performAction Invalid    = (b, i)
     performAction (Move dir) = let b' = move dir b in
       if b == b' then
-        b'
+        (b', i)
       else
-        (addRandomPiece b')
+        addRandomPiece (b', i)
 
 main : IO ()
 main = startEventLoop gridSize initialState transitionFunction gridForState
