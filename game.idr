@@ -4,13 +4,13 @@
 
 ||| Fills in an array 
 fillIn : LTE n m -> a -> Vect n a -> Vect m a
-fillIn lteZero c []            = replicate _ c
-fillIn (lteSucc w) c (x :: xs) = x :: (fillIn w c xs)
+fillIn LTEZero c []            = replicate _ c
+fillIn (LTESucc w) c (x :: xs) = x :: (fillIn w c xs)
 
 ||| Takes a proof that n <= m and gives a proof that n <= m + 1
-lteSuccR : LTE n m -> LTE n (S m)
-lteSuccR lteZero     = lteZero
-lteSuccR (lteSucc w) = lteSucc (lteSuccR w)
+LTESuccR : LTE n m -> LTE n (S m)
+LTESuccR LTEZero     = LTEZero
+LTESuccR (LTESucc w) = LTESucc (LTESuccR w)
 
 ||| Filters out the Nothings from a vector of maybes.
 |||
@@ -20,11 +20,11 @@ lteSuccR (lteSucc w) = lteSucc (lteSuccR w)
 ||| is a prove that m <= n, that is, that the new list has length
 ||| less than or equal to the original list.
 filterMaybes : Vect n (Maybe a) -> (m ** (Vect m a, LTE m n))
-filterMaybes []              = (Z ** ([], lteZero))
+filterMaybes []              = (Z ** ([], LTEZero))
 filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
-  (_ ** ((x :: ys), lteSucc w))
+  (_ ** ((x :: ys), LTESucc w))
 filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
-  (_ ** (ys, lteSuccR w))
+  (_ ** (ys, LTESuccR w))
 
 ||| The collapsing of pairs operation of the 2048 game.
 |||
@@ -35,18 +35,18 @@ filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
 collapsePairs (x::x'::xs) = 
   if x == x' then
-    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((x + 1) :: ys, lteSuccR (lteSucc w)))
+    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((x + 1) :: ys, LTESuccR (LTESucc w)))
   else
-     let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, lteSucc w))
-collapsePairs (x::[])     = (_ ** ([x], lteSucc lteZero))
-collapsePairs []          = (_ ** ([], lteZero))
+     let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, LTESucc w))
+collapsePairs (x::[])     = (_ ** ([x], LTESucc LTEZero))
+collapsePairs []          = (_ ** ([], LTEZero))
 
 ||| Proof of transitivity of the <= operator
 |||
 ||| Takes proofs that n <= m and m <= l and gives a proof that n <= l
 lteTrans : LTE n m -> LTE m l -> LTE n l
-lteTrans lteZero _                = lteZero
-lteTrans (lteSucc p) (lteSucc p') = lteSucc (lteTrans p p')
+lteTrans {l} LTEZero     _            = LTEZero {right=l}
+lteTrans     (LTESucc p) (LTESucc p') = LTESucc (lteTrans p p')
 
 ||| The basic row operation of the 2048 game.
 |||
@@ -89,8 +89,8 @@ unFlattenArray {n=(S k)}{m=l} xs = let (ys, zs) = split' {n=l}{m=k*l} xs in
 ||| Find the indices of all elements of a vector that satisfy some test
 total findIndicesFin : (a -> Bool) -> Vect n a -> List (Fin n)
 findIndicesFin f [] = []
-findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
-  if f x then (fZ :: tail) else tail
+findIndicesFin f (x::xs) = let tail = (map FS (findIndicesFin f xs)) in
+  if f x then (FZ :: tail) else tail
 
 --------------------------------------------------------------------------------
 -- Replicating some functions from std library
@@ -100,13 +100,6 @@ findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
 vmap : (a -> b) -> Vect n a -> Vect n b
 vmap _ [] = []
 vmap f (x::xs) = (f x)::(vmap f xs)
-
-
-toIntNat : Nat -> Int
-toIntNat n = toIntNat' n 0 where
-  toIntNat' : Nat -> Int -> Int
-  toIntNat' Z     x = x
-  toIntNat' (S n) x = toIntNat' n (x + 1)
 
 -- It should be possible to use Effect.Rand.  But for now, the functionaly
 -- is replicated here without using monads.
@@ -151,7 +144,7 @@ CellGrid (mkGridSize m n) = Vect m (Vect n Int)
 
 EncodeGrid : (size : GridSize) -> CellGrid size -> String
 EncodeGrid (mkGridSize Z _) _ = ""
-EncodeGrid (mkGridSize (S k) _) (r::rs) = (pack (vmap chr r)) ++ (EncodeGrid (mkGridSize k _) rs)
+EncodeGrid (mkGridSize (S k) _) (r::rs) = (pack (map chr r)) ++ (EncodeGrid (mkGridSize k _) rs)
 
 JSEvent : Type
 JSEvent = Int
