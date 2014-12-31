@@ -188,27 +188,30 @@ nn = 4
 Board : Type
 Board = Vect mm (Vect nn (Maybe Int))
 
+data GameState = BoardState Board Integer | GameOver
+
 gridSize : GridSize
 gridSize = mkGridSize mm nn;
 
-gridForState : (Board, Integer) -> (CellGrid gridSize)
-gridForState (b, i) = map (map (maybe 15 (\x => x))) b
+gridForState : GameState -> (CellGrid gridSize)
+gridForState (BoardState b _) = map (map (maybe 15 (\x => x))) b
+gridForState GameOver         = replicate _ (replicate _ 14)
 
 data Direction = Left | Right | Up | Down
 
-move : (Eq a, Num a) => Direction -> Vect m (Vect n (Maybe a)) -> Vect m (Vect n (Maybe a))
+move : Direction -> Board -> Board
 move Left  = vmap basicRowOperation
 move Right = vmap (reverse . basicRowOperation . reverse)
 move Up    = transposeArray . (move Left) . transposeArray
 move Down  = transposeArray . (move Right) . transposeArray
 
-addRandomPiece : (Board, Integer) -> (Board, Integer)
-addRandomPiece (arr, i) = let (i', x) = rndSelect i indices in case x of
-    Nothing => (arr, i')
-    Just idx => (unFlattenArray (replaceAt idx (Just 0) flattened), i')
+addRandomPiece : Board -> Integer -> GameState
+addRandomPiece b rng = let (rng', maybeIdx) = rndSelect rng indices in case maybeIdx of
+    Nothing => BoardState b rng'
+    Just idx => BoardState (unFlattenArray (replaceAt idx (Just 0) flattened))  rng'
   where
     flattened : Vect (mm * nn) (Maybe Int)
-    flattened = flattenArray arr
+    flattened = flattenArray b
     indices : List (Fin (mm * nn))
     indices = findIndicesFin isNothing flattened
 
@@ -221,19 +224,27 @@ getAction 39 = Move Right
 getAction 40 = Move Down
 getAction _   = Invalid
 
-initialState : (Board, Integer)
-initialState = addRandomPiece (replicate _ (replicate _ Nothing), 0)
+initialState : GameState
+initialState = addRandomPiece (replicate _ (replicate _ Nothing)) 0
 
-transitionFunction : (Board, Integer) -> Int -> (Board, Integer)
-transitionFunction (b, i) = performAction . getAction
+
+isLosingPosition : Board -> Bool
+isLosingPosition b = all (\dir => move dir b == b) $ (the (Vect _ Direction)) [Left, Up, Right, Down]
+
+transitionFunction : GameState -> Int -> GameState
+transitionFunction GameOver _ = GameOver
+transitionFunction (BoardState b rng) charcode = if isLosingPosition b then
+    GameOver
+  else
+    performAction (getAction charcode)
   where
-    performAction : UserAction -> (Board, Integer)
-    performAction Invalid    = (b, i)
+    performAction : UserAction -> GameState
+    performAction Invalid    = BoardState b rng
     performAction (Move dir) = let b' = move dir b in
       if b == b' then
-        (b', i)
+        BoardState b' rng
       else
-        addRandomPiece (b', i)
+        addRandomPiece b' rng
 
 main : IO ()
 main = startEventLoop gridSize initialState transitionFunction gridForState
