@@ -6,21 +6,27 @@ var IdrisInterface = function(element, grid_size) {
 	/**
 	 * Array of grid cells, arranged in row major format
 	 */
-	this.cells_ = this.get_cells_(grid_size);
+	this.cells_ = this.create_cells_(grid_size);
 
 	var that = this;
 	element.addEventListener('keydown', function(e) {that.on_keydown_(e)});
-}
+};
 
-IdrisInterface.prototype.get_cells_ = function(grid_size) {
+IdrisInterface.prototype.create_cells_ = function(grid_size) {
 	var cells = [];
 	for (var i = 0; i < grid_size; i++) {
+		var row = document.createElement('div');
+		row.className = 'row';
 		for (var j = 0; j < grid_size; j++) {
-			cells.push(document.getElementById("" + i + "" + j));
+			var cell = document.createElement('div');
+			cell.className = 'cell';
+			cells.push(cell);
+			row.appendChild(cell);
 		}
+		this.element_.appendChild(row);
 	}
 	return cells;
-}
+};
 
 IdrisInterface.prototype.on_keydown_ = function(e) {
 	if (this.callbacks_.length > 0) {
@@ -49,6 +55,6 @@ IdrisInterface.prototype.show = function(str) {
 		var cell_html = cell_value == 0 ? '' : Math.pow(2, cell_value);
 		this.cells_[i].innerHTML = cell_html;
 	}
-}
+};
 
 var idris_interface = new IdrisInterface(document.getElementById('game-area'), 4);
