@@ -154,8 +154,8 @@ gridSize : GridSize
 gridSize = mkGridSize mm nn;
 
 gridForState : GameState -> (CellGrid gridSize)
-gridForState (BoardState b _) = map (map (maybe 15 (\x => x))) b
-gridForState GameOver         = replicate _ (replicate _ 14)
+gridForState (BoardState b _) = map (map (maybe 11 (\x => x))) b
+gridForState GameOver         = [[11, 11, 11, 11], [12, 13, 14, 15], [16, 17, 18, 19], [11, 11, 11, 11]]
 
 data Direction = Left | Up | Right | Down
 
