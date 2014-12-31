@@ -93,24 +93,26 @@ findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
   if f x then (fZ :: tail) else tail
 
 --------------------------------------------------------------------------------
--- Display functions
+-- Fix for strange error with Vector.map
 --------------------------------------------------------------------------------
 
-showValue : Maybe Int -> Char
-showValue Nothing  = chr 0
-showValue (Just x) = chr x
-
-showRow : Vect n (Maybe Int) -> String
-showRow []      = ""
-showRow (x::xs) = strCons (showValue x) (showRow xs)
-
-showBoard : Vect m (Vect n (Maybe Int)) -> String
-showBoard []      = ""
-showBoard (x::xs) = (showRow x) ++ (showBoard xs)
+-- For some reason, map isn't working with Vect, so I define my own
+vmap : (a -> b) -> Vect n a -> Vect n b
+vmap _ [] = []
+vmap f (x::xs) = (f x)::(vmap f xs)
 
 --------------------------------------------------------------------------------
 -- JavaScript Engine
 --------------------------------------------------------------------------------
+
+data GridSize = mkGridSize Nat Nat
+
+CellGrid : GridSize -> Type
+CellGrid (mkGridSize m n) = Vect m (Vect n Int)
+
+EncodeGrid : (size : GridSize) -> CellGrid size -> String
+EncodeGrid (mkGridSize Z _) _ = ""
+EncodeGrid (mkGridSize (S k) _) (r::rs) = (pack (vmap chr r)) ++ (EncodeGrid (mkGridSize k _) rs)
 
 JSEvent : Type
 JSEvent = Int
@@ -121,10 +123,10 @@ getNextEvent cb = mkForeign (FFun "idris_interface.get_next_event(%0)" [FFunctio
 display : String -> IO ()
 display str = mkForeign (FFun "idris_interface.show(%0)" [FString] FUnit) str
 
-runLoop : a -> (a -> Int -> a) -> (a -> String) -> IO ()
-runLoop init trans view = do
-  display (view init)
-  getNextEvent (\x => runLoop (trans init x) trans view)
+runLoop : (size : GridSize) -> a -> (a -> Int -> a) -> (a -> (CellGrid size)) -> IO ()
+runLoop size init trans view = do
+  display (EncodeGrid size (view init))
+  getNextEvent (\x => runLoop size (trans init x) trans view)
 
 --------------------------------------------------------------------------------
 -- High level game logic
@@ -133,12 +135,17 @@ runLoop init trans view = do
 Board : Type
 Board = Vect 4 (Vect 4 (Maybe Int))
 
-data Direction = Left | Right | Up | Down
+showValue : Maybe Int -> Int
+showValue Nothing  = 0
+showValue (Just x) = x
 
--- For some reason, map isn't working with Vect, so I define my own
-vmap : (a -> b) -> Vect n a -> Vect n b
-vmap _ [] = []
-vmap f (x::xs) = (f x)::(vmap f xs)
+gridSize : GridSize
+gridSize = mkGridSize 4 4;
+
+gridForState : Board -> (CellGrid gridSize)
+gridForState = map (map showValue)
+
+data Direction = Left | Right | Up | Down
 
 move : (Eq a, Num a) => Direction -> Vect m (Vect n (Maybe a)) -> Vect m (Vect n (Maybe a))
 move Left  = vmap basicRowOperation
@@ -185,4 +192,4 @@ transitionFunction b = performAction . getAction
         (addRandomPiece b')
 
 main : IO ()
-main = runLoop initialState transitionFunction showBoard
+main = runLoop gridSize initialState transitionFunction gridForState
