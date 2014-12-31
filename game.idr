@@ -148,10 +148,10 @@ startEventLoop (mkGridSize m n) init trans view = do
 --------------------------------------------------------------------------------
 
 mm : Nat
-mm = 5
+mm = 4
 
 nn : Nat
-nn = 7
+nn = 4
 
 Board : Type
 Board = Vect mm (Vect nn (Maybe Int))
