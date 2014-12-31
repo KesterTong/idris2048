@@ -187,7 +187,6 @@ getAction _   = Invalid
 initialState : GameState
 initialState = addRandomPiece (replicate _ (replicate _ Nothing)) 0
 
-
 isLosingPosition : Board -> Bool
 isLosingPosition b = all (\dir => move dir b == b) $ (the (Vect _ Direction)) [Left, Up, Right, Down]
 
