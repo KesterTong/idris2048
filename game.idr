@@ -96,15 +96,15 @@ findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
 -- Display functions
 --------------------------------------------------------------------------------
 
-showValue : Show a => Maybe a -> String
-showValue Nothing  = "."
-showValue (Just x) = show x
+showValue : Maybe Int -> Char
+showValue Nothing  = chr 0
+showValue (Just x) = chr x
 
-showRow : Show a => Vect n (Maybe a) -> String
+showRow : Vect n (Maybe Int) -> String
 showRow []      = ""
-showRow (x::xs) = (showValue x) ++ (showRow xs)
+showRow (x::xs) = strCons (showValue x) (showRow xs)
 
-showBoard : Show a => Vect m (Vect n (Maybe a)) -> String
+showBoard : Vect m (Vect n (Maybe Int)) -> String
 showBoard []      = ""
 showBoard (x::xs) = (showRow x) ++ (showBoard xs)
 

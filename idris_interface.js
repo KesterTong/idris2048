@@ -27,9 +27,8 @@ IdrisInterface.prototype.get_next_event = function(callback) {
 IdrisInterface.prototype.show = function(str) {
 	for (var i = 0; i < 4; i++) {
 		for (var j = 0; j < 4; j++) {
-			console.log("" + i + "" + j)
-			var value = Math.pow(2, str[4 * i + j]);
-			document.getElementById("" + i + "" + j).innerHTML = value || ''
+			var value = Math.pow(2, str.charCodeAt(4 * i + j));
+			document.getElementById("" + i + "" + j).innerHTML = value === 1 ? '' : value
 		}
 	}
 }
