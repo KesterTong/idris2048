@@ -152,4 +152,11 @@ basicRowOperation xs = let (m ** (ys, w)) = filterMaybes xs in let
 
 As before, the compiler/interpreter knows that the function basicRowOperation is total.  This is a cool property, because the function is proven to be total even though we didn't define the extra cases like in fillInList.
 
-...to be continued...
+This ends the discussion of the code (for now).  Most of the rest of the code (apart from the JS bindings) will be familiar to most Haskell programmers.
+
+## JavaScript Bindings and Game Engine
+
+The UI is done using a tiling game engine that uses JavaScript/HTML and the Idris HTML
+bindings.  The package is built and installed using the instructions at the top of this page.
+
+More documentation (and probably a new repo) coming soon.
