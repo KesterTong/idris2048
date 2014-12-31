@@ -157,7 +157,7 @@ gridForState : GameState -> (CellGrid gridSize)
 gridForState (BoardState b _) = map (map (maybe 15 (\x => x))) b
 gridForState GameOver         = replicate _ (replicate _ 14)
 
-data Direction = Left | Right | Up | Down
+data Direction = Left | Up | Right | Down
 
 move : Direction -> Board -> Board
 move Left  = vmap basicRowOperation
@@ -177,12 +177,12 @@ addRandomPiece b rng = let (rng', maybeIdx) = rndSelect rng indices in case mayb
 
 data UserAction = Invalid | Move Direction
 
-getAction : Int -> UserAction
-getAction 37 = Move Left
-getAction 38 = Move Up
-getAction 39 = Move Right
-getAction 40 = Move Down
-getAction _   = Invalid
+getAction : KeyboardInput -> UserAction
+getAction LeftArrow  = Move Left
+getAction UpArrow    = Move Up
+getAction RightArrow = Move Right
+getAction DownArrow  = Move Down
+getAction _          = Invalid
 
 initialState : GameState
 initialState = addRandomPiece (replicate _ (replicate _ Nothing)) 0
@@ -190,7 +190,7 @@ initialState = addRandomPiece (replicate _ (replicate _ Nothing)) 0
 isLosingPosition : Board -> Bool
 isLosingPosition b = all (\dir => move dir b == b) $ (the (Vect _ Direction)) [Left, Up, Right, Down]
 
-transitionFunction : GameState -> Int -> GameState
+transitionFunction : GameState -> KeyboardInput -> GameState
 transitionFunction GameOver _ = GameOver
 transitionFunction (BoardState b rng) charcode = if isLosingPosition b then
     GameOver
