@@ -75,8 +75,8 @@ fillInList c l = if length l < 4 then
 Idris has types, like Vect n a, which represents a vector of length n and with elements of type a.  It also has types that represent assertions, or propositions.  The type LTE m n represents the proposition that m is less than n.  It is non-empty exactly when m <= n.  An element of LTE m n can be thought of as a witness, or proof, that m <= n.  The fill in function in Idris is given by
 ```
 fillIn : LTE n m -> a -> Vect n a -> Vect m a
-fillIn lteZero c []            = replicate _ c
-fillIn (lteSucc w) c (x :: xs) = x :: (fillIn w c xs)
+fillIn LTEZero c []            = replicate _ c
+fillIn (LTESucc w) c (x :: xs) = x :: (fillIn w c xs)
 ```
 From the signature, it takes a witness that m <= n, an element of type a, and a vector of length m (of elements of type a) and returns a vector of length n (of elements of type a).  Since the type LTE m n is empty unless m <= n, it is impossible to call fillIn unless m <= n.  This is very useful to know, because on the one hand, we don't have to right logic for cases which we know will never occur (like in the fillInList function), and on the other hand, the type checker will ensure that this function will only be called when m <= n.  We'll show later how this is possible even in the case where the length of the vector varies at run time, like in the game 2048.
 
@@ -87,11 +87,11 @@ As the above shows, dealing with witnesses/proofs is not much more difficult tha
 ||| @ m the larger number
 data LTE  : (n, m : Nat) -> Type where
   ||| Zero is the smallest Nat
-  lteZero : LTE Z    right
+  LTEZero : LTE Z    right
   ||| If n <= m, then n + 1 <= m + 1
-  lteSucc : LTE left right -> LTE (S left) (S right)
+  LTESucc : LTE left right -> LTE (S left) (S right)
 ```
-The first constructor, lteZero, represents the fact that 0 <= m for all m, while the second takes a proof that n <= m and gives a proof n + 1 <= m + 1.  So we can define fillIn by recursion on the witness and the vector.  Naively, there would be four cases, two for the witness, by two for the vector.  But because we know that both these type depend on m, there are actually only two cases we need to consider.  When n = Z (the Nat type uses Z instead of zero to distinguish it from the Integer type), then there is only one case that applies for constructing the witness, lteZero, and for the vector, the empty vector. When n=Sk for some k, then the witness must have the form lteSucc w and the vector must have the form y :: ys.  These two cases are given above.
+The first constructor, LTEZero, represents the fact that 0 <= m for all m, while the second takes a proof that n <= m and gives a proof n + 1 <= m + 1.  So we can define fillIn by recursion on the witness and the vector.  Naively, there would be four cases, two for the witness, by two for the vector.  But because we know that both these type depend on m, there are actually only two cases we need to consider.  When n = Z (the Nat type uses Z instead of zero to distinguish it from the Integer type), then there is only one case that applies for constructing the witness, LTEZero, and for the vector, the empty vector. When n=Sk for some k, then the witness must have the form LTESucc w and the vector must have the form y :: ys.  These two cases are given above.
 
 Verbally, the logic of the above functions is as follows: given n <= m and a vector of length n, we want to fill in the vector m, with the provided constant, to become a vector of length n.  There are two cases.  In the case n = Z, then we can construct the vector by replicating the constant m times.  In the case of n = k + 1, we by induction on the definition of n <= m, there must be and l such that m = l + 1 and k <= l.  Furthermore, the vector has length k + 1 and so must have the form x :: xs, where xs has length k.  Then we can apply the function fillIn to the vector xs, to get a vector of length l, since we know that k <= l.  Call this vector (fillIn w c xs).  The vector x :: (fillIn w c xs) has length l + 1, which equals m.  This is x :: xs filled in to length m.
 
@@ -117,7 +117,7 @@ Now that we have the fillIn function, we can work backwards and construct the fi
 filterMaybes : Vect n (Maybe a) -> (m ** (Vect m a, LTE m n))
 filterMaybes []              = (Z ** ([], lteZero))
 filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
-  (_ ** ((x :: ys), lteSucc w))
+  (_ ** ((x :: ys), LTESucc w))
 filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
   (_ ** (ys, lteSuccR w))
 ```
@@ -130,11 +130,11 @@ The construction of collapsePairs is exactly the same, with the code given by
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
 collapsePairs (x :: xprime :: xs) = 
     if x == xprime then
-    	let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (lteSucc w)))
+    	let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (LTESucc w)))
     else
-        let (_ ** (ys, w)) = collapsePairs (xprime :: xs) in (_ ** (x :: ys, lteSucc w))
-collapsePairs (x :: [])           = (_ ** ([x], lteSucc lteZero))
-collapsePairs []                  = (_ ** ([], lteZero))
+        let (_ ** (ys, w)) = collapsePairs (xprime :: xs) in (_ ** (x :: ys, LTESucc w))
+collapsePairs (x :: [])           = (_ ** ([x], LTESucc LTEZero))
+collapsePairs []                  = (_ ** ([], LTEZero))
 
 ```
 
