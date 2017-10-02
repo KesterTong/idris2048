@@ -138,7 +138,7 @@ move Down  = transposeArray . (move Right) . transposeArray
 addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff Board
 addRandomPiece arr = case !(rndSelect indices) of
     Nothing => raise "Game Over"
-    Just idx => return (unFlattenArray (replaceAt idx (Just 2) flattened))
+    Just idx => pure (unFlattenArray (replaceAt idx (Just 2) flattened))
   where
     flattened : Vect 16 (Maybe Int)
     flattened = flattenArray arr
@@ -175,7 +175,7 @@ startGame = do
   srand $ prim__zextInt_BigInt !time
   initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
   mainLoop initialBoard
-  return ()	
+  pure ()
 
 main : IO ()
 main = run startGame
