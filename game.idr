@@ -1,7 +1,9 @@
+import Effects
 import Effect.Exception
 import Effect.StdIO
 import Effect.Random
 import Effect.System
+import Data.Vect
 
 --------------------------------------------------------------------------------
 -- Operations on individual rows
