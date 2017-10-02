@@ -172,7 +172,7 @@ mainLoop b = do putStrLn (showBoard b)
 
 startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff ()
 startGame = do
-  srand $ prim__zextInt_BigInt !time
+  srand !time
   initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
   mainLoop initialBoard
   pure ()
