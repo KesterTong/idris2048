@@ -1,7 +1,9 @@
+import Effects
 import Effect.Exception
 import Effect.StdIO
 import Effect.Random
 import Effect.System
+import Data.Vect
 
 --------------------------------------------------------------------------------
 -- Operations on individual rows
@@ -9,13 +11,13 @@ import Effect.System
 
 ||| Fills in an array 
 fillIn : LTE n m -> a -> Vect n a -> Vect m a
-fillIn lteZero c []            = replicate _ c
-fillIn (lteSucc w) c (x :: xs) = x :: (fillIn w c xs)
+fillIn LTEZero c []            = replicate _ c
+fillIn (LTESucc w) c (x :: xs) = x :: (fillIn w c xs)
 
 ||| Takes a proof that n <= m and gives a proof that n <= m + 1
 lteSuccR : LTE n m -> LTE n (S m)
-lteSuccR lteZero     = lteZero
-lteSuccR (lteSucc w) = lteSucc (lteSuccR w)
+lteSuccR LTEZero     = LTEZero
+lteSuccR (LTESucc w) = LTESucc (lteSuccR w)
 
 ||| Filters out the Nothings from a vector of maybes.
 |||
@@ -25,9 +27,9 @@ lteSuccR (lteSucc w) = lteSucc (lteSuccR w)
 ||| is a prove that m <= n, that is, that the new list has length
 ||| less than or equal to the original list.
 filterMaybes : Vect n (Maybe a) -> (m ** (Vect m a, LTE m n))
-filterMaybes []              = (Z ** ([], lteZero))
+filterMaybes []              = (Z ** ([], LTEZero))
 filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
-  (_ ** ((x :: ys), lteSucc w))
+  (_ ** ((x :: ys), LTESucc w))
 filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
   (_ ** (ys, lteSuccR w))
 
@@ -40,18 +42,18 @@ filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
 collapsePairs (x::x'::xs) = 
   if x == x' then
-    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (lteSucc w)))
+    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (LTESucc w)))
   else
-     let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, lteSucc w))
-collapsePairs (x::[])     = (_ ** ([x], lteSucc lteZero))
-collapsePairs []          = (_ ** ([], lteZero))
+    let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, LTESucc w))
+collapsePairs (x::[])     = (_ ** ([x], LTESucc LTEZero))
+collapsePairs []          = (_ ** ([], LTEZero))
 
 ||| Proof of transitivity of the <= operator
 |||
 ||| Takes proofs that n <= m and m <= l and gives a proof that n <= l
 lteTrans : LTE n m -> LTE m l -> LTE n l
-lteTrans lteZero _                = lteZero
-lteTrans (lteSucc p) (lteSucc p') = lteSucc (lteTrans p p')
+lteTrans LTEZero _                = LTEZero
+lteTrans (LTESucc p) (LTESucc p') = LTESucc (lteTrans p p')
 
 ||| The basic row operation of the 2048 game.
 |||
@@ -94,8 +96,8 @@ unFlattenArray {n=(S k)}{m=l} xs = let (ys, zs) = split' {n=l}{m=k*l} xs in
 ||| Find the indices of all elements of a vector that satisfy some test
 total findIndicesFin : (a -> Bool) -> Vect n a -> List (Fin n)
 findIndicesFin f [] = []
-findIndicesFin f (x::xs) = let tail = (map fS (findIndicesFin f xs)) in
-  if f x then (fZ :: tail) else tail
+findIndicesFin f (x::xs) = let tail = (map FS (findIndicesFin f xs)) in
+  if f x then (FZ :: tail) else tail
 
 --------------------------------------------------------------------------------
 -- Display functions
@@ -136,7 +138,7 @@ move Down  = transposeArray . (move Right) . transposeArray
 addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff Board
 addRandomPiece arr = case !(rndSelect indices) of
     Nothing => raise "Game Over"
-    Just idx => return (unFlattenArray (replaceAt idx (Just 2) flattened))
+    Just idx => pure (unFlattenArray (replaceAt idx (Just 2) flattened))
   where
     flattened : Vect 16 (Maybe Int)
     flattened = flattenArray arr
@@ -170,10 +172,10 @@ mainLoop b = do putStrLn (showBoard b)
 
 startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff ()
 startGame = do
-  srand $ prim__zextInt_BigInt !time
+  srand !time
   initialBoard <- addRandomPiece (replicate _ (replicate _ Nothing))
   mainLoop initialBoard
-  return ()	
+  pure ()
 
 main : IO ()
 main = run startGame
