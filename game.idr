@@ -124,14 +124,9 @@ Board = Vect 4 (Vect 4 (Maybe Int))
 
 data Direction = Left | Right | Up | Down
 
--- For some reason, map isn't working with Vect, so I define my own
-vmap : (a -> b) -> Vect n a -> Vect n b
-vmap _ [] = []
-vmap f (x::xs) = (f x)::(vmap f xs)
-
 move : (Eq a, Num a) => Direction -> Vect m (Vect n (Maybe a)) -> Vect m (Vect n (Maybe a))
-move Left  = vmap basicRowOperation
-move Right = vmap (reverse . basicRowOperation . reverse)
+move Left  = map basicRowOperation
+move Right = map (reverse . basicRowOperation . reverse)
 move Up    = transposeArray . (move Left) . transposeArray
 move Down  = transposeArray . (move Right) . transposeArray
 
