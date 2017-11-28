@@ -16,11 +16,6 @@ fillIn : LTE n m -> a -> Vect n a -> Vect m a
 fillIn LTEZero c []            = replicate _ c
 fillIn (LTESucc w) c (x :: xs) = x :: (fillIn w c xs)
 
-||| Takes a proof that n <= m and gives a proof that n <= m + 1
-lteSuccR : LTE n m -> LTE n (S m)
-lteSuccR LTEZero     = LTEZero
-lteSuccR (LTESucc w) = LTESucc (lteSuccR w)
-
 ||| Filters out the Nothings from a vector of maybes.
 |||
 ||| Takes a vector of length n with elements of type Maybe a
@@ -33,7 +28,7 @@ filterMaybes []              = (Z ** ([], LTEZero))
 filterMaybes (Just x :: xs)  = let (_ ** (ys, w)) = filterMaybes xs in
   (_ ** ((x :: ys), LTESucc w))
 filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
-  (_ ** (ys, lteSuccR w))
+  (_ ** (ys, lteSuccRight w))
 
 ||| The collapsing of pairs operation of the 2048 game.
 |||
@@ -44,18 +39,11 @@ filterMaybes (Nothing :: xs) = let (_ ** (ys, w)) = filterMaybes xs in
 collapsePairs : (Num a, Eq a) => Vect n a -> (m ** (Vect m a, LTE m n))
 collapsePairs (x::x'::xs) = 
   if x == x' then
-    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccR (LTESucc w)))
+    let (_ ** (ys, w)) = collapsePairs xs in (_ ** ((2 * x) :: ys, lteSuccRight (LTESucc w)))
   else
     let (_ ** (ys, w)) = collapsePairs (x' :: xs) in (_ ** (x :: ys, LTESucc w))
 collapsePairs (x::[])     = (_ ** ([x], LTESucc LTEZero))
 collapsePairs []          = (_ ** ([], LTEZero))
-
-||| Proof of transitivity of the <= operator
-|||
-||| Takes proofs that n <= m and m <= l and gives a proof that n <= l
-lteTrans : LTE n m -> LTE m l -> LTE n l
-lteTrans LTEZero _                = LTEZero
-lteTrans (LTESucc p) (LTESucc p') = LTESucc (lteTrans p p')
 
 ||| The basic row operation of the 2048 game.
 |||
@@ -67,7 +55,7 @@ lteTrans (LTESucc p) (LTESucc p') = LTESucc (lteTrans p p')
 basicRowOperation : (Eq a, Num a) => Vect n (Maybe a) -> Vect n (Maybe a)
 basicRowOperation xs = let (m ** (ys, w)) = filterMaybes xs in let
   (l ** (zs, wPrime)) = collapsePairs ys in
-  (fillIn (lteTrans wPrime w) Nothing (map Just zs))
+  (fillIn (lteTransitive wPrime w) Nothing (map Just zs))
 
 --------------------------------------------------------------------------------
 -- Operations on the game board
