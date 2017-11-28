@@ -5,6 +5,8 @@ import Effect.Random
 import Effect.System
 import Data.Vect
 
+%default total
+
 --------------------------------------------------------------------------------
 -- Operations on individual rows
 --------------------------------------------------------------------------------
@@ -94,7 +96,7 @@ unFlattenArray {n=(S k)}{m=l} xs = let (ys, zs) = split' {n=l}{m=k*l} xs in
   (ys :: (unFlattenArray zs))
 
 ||| Find the indices of all elements of a vector that satisfy some test
-total findIndicesFin : (a -> Bool) -> Vect n a -> List (Fin n)
+findIndicesFin : (a -> Bool) -> Vect n a -> List (Fin n)
 findIndicesFin f [] = []
 findIndicesFin f (x::xs) = let tail = (map FS (findIndicesFin f xs)) in
   if f x then (FZ :: tail) else tail
@@ -124,11 +126,12 @@ Board = Vect 4 (Vect 4 (Maybe Int))
 
 data Direction = Left | Right | Up | Down
 
+partial
 move : (Eq a, Num a) => Direction -> Vect m (Vect n (Maybe a)) -> Vect m (Vect n (Maybe a))
-move Left  = map basicRowOperation
-move Right = map (reverse . basicRowOperation . reverse)
-move Up    = transposeArray . (move Left) . transposeArray
-move Down  = transposeArray . (move Right) . transposeArray
+move Left  xs = map basicRowOperation xs
+move Right xs = map (reverse . basicRowOperation . reverse) xs
+move Up    xs = (transposeArray . (move Left) . transposeArray) xs
+move Down  xs = (transposeArray . (move Right) . transposeArray) xs
 
 addRandomPiece : Board -> {[RND, EXCEPTION String]} Eff Board
 addRandomPiece arr = case !(rndSelect indices) of
@@ -150,21 +153,25 @@ getAction 's' = Move Down
 getAction 'x' = Quit
 getAction _   = Invalid
 
+partial
 mainLoop : Board -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
 mainLoop b = do putStrLn (showBoard b)
                 c <- getChar
                 performAction (getAction c)
-    where performAction : UserAction -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
-          performAction Quit       = raise "You have quit"
-          performAction Invalid    = mainLoop b
-          performAction (Move dir) = let b' = move dir b in
-            if b == b' then
-              mainLoop b'
-            else
-              do
-                b'' <- addRandomPiece b'
-                mainLoop b''
+    where
+      partial
+      performAction : UserAction -> {[RND, STDIO, EXCEPTION String]} Eff (Board)
+      performAction Quit       = raise "You have quit"
+      performAction Invalid    = mainLoop b
+      performAction (Move dir) = let b' = move dir b in
+        if b == b' then
+          mainLoop b'
+        else
+          do
+            b'' <- addRandomPiece b'
+            mainLoop b''
 
+partial
 startGame : { [RND, STDIO, SYSTEM, EXCEPTION String] } Eff ()
 startGame = do
   srand !time
@@ -172,5 +179,6 @@ startGame = do
   mainLoop initialBoard
   pure ()
 
+partial
 main : IO ()
 main = run startGame
